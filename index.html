@@ -269,6 +269,63 @@
   .add-goal{display:grid; gap:12px; grid-template-columns:1.4fr 0.8fr 0.9fr auto; align-items:end; margin-top:20px;}
   @media (max-width:720px){.add-goal{grid-template-columns:1fr 1fr;}}
 
+  /* ---------- Pipeline / Leads ---------- */
+  .add-lead-row{display:flex; gap:10px;}
+  .add-lead-row input{flex:1; background:var(--emerald2); border:1px solid var(--border); color:var(--cream); padding:10px 12px; border-radius:0; font-size:13px; min-height:44px;}
+  .add-lead-row input:focus{outline:none; border-color:var(--gold);}
+  .add-lead-row .mini-btn{min-height:44px;}
+
+  .stage-group{margin-bottom:22px;}
+  .stage-group:last-child{margin-bottom:0;}
+  .stage-group-head{display:flex; align-items:center; gap:10px; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);}
+  .stage-count{background:var(--emerald2); border:1px solid var(--border-strong); border-radius:10px; padding:1px 8px; font-size:10px; color:var(--dim);}
+
+  .lead-card{background:var(--emerald2); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:12px;}
+  .lead-card.archived{opacity:0.75;}
+  .lead-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;}
+  .lead-name{font-family:'Cormorant Garamond'; font-style:italic; font-weight:600; font-size:18px;}
+  .icon-ghost-btn{background:none; border:1px solid var(--border-strong); color:var(--dim); border-radius:50%; width:36px; height:36px; min-width:36px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .icon-ghost-btn:hover{border-color:var(--gold); color:var(--gold);}
+  .icon-ghost-btn svg{width:15px;height:15px;}
+
+  .lead-meta-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+  .lead-stage-select{background:var(--emerald); border:1px solid var(--border-strong); color:var(--cream); padding:8px 30px 8px 12px; border-radius:0; font-size:11.5px; min-height:38px; appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239db3a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 8px center;}
+  .lead-stage-select:focus{outline:none; border-color:var(--gold);}
+
+  .followup-badge{display:inline-flex; align-items:center; gap:5px; font-size:10.5px; letter-spacing:0.04em; padding:6px 11px; border-radius:12px; border:1px solid var(--border-strong);}
+  .followup-badge svg{width:12px;height:12px;}
+  .followup-badge.overdue{color:var(--danger); border-color:var(--danger);}
+  .followup-badge.due{color:var(--gold-ink); background:var(--gold-bright); border-color:var(--gold-bright); font-weight:700;}
+  .followup-badge.upcoming{color:var(--dim);}
+  .followup-badge.responded{color:var(--gold); border-color:var(--gold);}
+  .followup-badge.neutral{color:var(--dim2);}
+
+  .lead-tally-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+  .tally-chip{display:inline-flex; align-items:center; gap:5px; background:var(--emerald); border:1px solid var(--border); border-radius:10px; padding:5px 10px; font-size:11px; color:var(--dim);}
+  .tally-chip svg{width:12px;height:12px; color:var(--gold);}
+  .tally-chip b{font-weight:700; color:var(--cream);}
+  .tally-chip.empty{color:var(--dim2); font-style:italic;}
+
+  .lead-notes{font-size:12px; color:var(--dim); line-height:1.5; margin-bottom:12px; padding-left:10px; border-left:2px solid var(--border-strong);}
+
+  .lead-actions-row{display:flex; gap:18px; flex-wrap:wrap;}
+
+  .lead-quick-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px;}
+  @media (max-width:520px){.lead-quick-grid{grid-template-columns:repeat(2,1fr);}}
+  .lead-quick-btn{display:flex; flex-direction:column; align-items:center; gap:6px; background:var(--emerald); border:1px solid var(--border); color:var(--cream); padding:12px 6px; cursor:pointer; min-height:56px; font-size:10px;}
+  .lead-quick-btn:hover{border-color:var(--gold); color:var(--gold-bright);}
+  .lead-quick-btn svg{width:16px;height:16px; color:var(--gold);}
+
+  .archive-panel{padding-top:14px; padding-bottom:14px;}
+  .archive-toggle{width:100%; display:flex; align-items:center; gap:10px; background:none; border:none; color:var(--dim2); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; padding:6px 0; min-height:44px;}
+  .archive-toggle svg{width:15px;height:15px;}
+  .archive-toggle span:first-of-type{flex:1; text-align:left;}
+  .archive-toggle:hover{color:var(--dim);}
+  .archive-chevron{font-size:9px;}
+  .archive-body{margin-top:14px; padding-top:14px; border-top:1px dashed var(--border-strong);}
+
   footer{text-align:center; margin-top:28px;}
   footer button{background:none; border:none; color:var(--dim2); font-size:10.5px; text-decoration:underline; cursor:pointer;}
   footer button:hover{color:var(--gold);}
@@ -298,6 +355,9 @@
   <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12,3 15,10 22,10.5 16.5,15 18.5,22 12,17.8 5.5,22 7.5,15 2,10.5 9,10"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l6 6 10-13"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.2"/><path d="M2.5 20v-1.3A4.5 4.5 0 0 1 7 14.2h1a4.5 4.5 0 0 1 4.5 4.5V20"/><circle cx="17" cy="9.5" r="2.6"/><path d="M14.8 14.6A4 4 0 0 1 21 18.2V20"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9"/><path d="M10 13h4"/></symbol>
 </defs>
 </svg>
 
@@ -343,6 +403,7 @@
   var core = OutreachCore('deco_v1', {defaultPin:'1234'});
   var TABS = [
     {key:'dashboard', label:'Salon', icon:'i-grid'},
+    {key:'pipeline', label:'Pipeline', icon:'i-users'},
     {key:'history', label:'History', icon:'i-clock'},
     {key:'goals', label:'Goals', icon:'i-target'},
     {key:'badges', label:'Honors', icon:'i-award'}
@@ -549,6 +610,167 @@
     }).join('');
   }
 
+  var pipelineQuickOpenId = null;
+  var pipelineArchiveOpen = false;
+
+  function followUpBadgeHtml(fu, leadId){
+    if(!fu) return '';
+    if(fu.status==='responded'){
+      var rt = core.leadResponseTimeDays(leadId);
+      return '<span class="followup-badge responded">'+icon('i-check')+'Responded'+(rt!=null?' · '+rt+'d':'')+'</span>';
+    }
+    if(fu.status==='no-touches') return '<span class="followup-badge neutral">Not contacted yet</span>';
+    if(fu.status==='overdue') return '<span class="followup-badge overdue">Overdue '+Math.abs(fu.daysUntil)+'d</span>';
+    if(fu.status==='due') return '<span class="followup-badge due">Due today</span>';
+    return '<span class="followup-badge upcoming">Due in '+fu.daysUntil+'d</span>';
+  }
+  function tallyChipsHtml(leadId){
+    var counts = core.leadTouchCounts(leadId);
+    var chips = core.ACTION_TYPES.filter(function(a){ return counts[a.key]>0; }).map(function(a){
+      return '<span class="tally-chip">'+icon(ACTION_ICON[a.key])+'<b>×'+counts[a.key]+'</b></span>';
+    }).join('');
+    return chips || '<span class="tally-chip empty">No touches yet</span>';
+  }
+  function leadCardHtml(lead){
+    var fu = core.leadFollowUp(lead.id);
+    var stageOpts = core.LEAD_STAGES.map(function(s){ return '<option value="'+s.key+'"'+(s.key===lead.stage?' selected':'')+'>'+esc(s.label)+'</option>'; }).join('');
+    var quickOpen = pipelineQuickOpenId===lead.id;
+    var responded = fu && fu.status==='responded';
+    return '<div class="lead-card'+(lead.archived?' archived':'')+'" data-lead="'+lead.id+'">'+
+      '<div class="lead-top"><div class="lead-name">'+esc(lead.name)+'</div>'+
+        '<button class="icon-ghost-btn" data-archive-toggle="'+lead.id+'" title="'+(lead.archived?'Restore to pipeline':'Archive')+'">'+icon(lead.archived?'i-users':'i-archive')+'</button>'+
+      '</div>'+
+      '<div class="lead-meta-row">'+
+        '<select class="lead-stage-select" data-lead-stage="'+lead.id+'">'+stageOpts+'</select>'+
+        followUpBadgeHtml(fu, lead.id)+
+      '</div>'+
+      '<div class="lead-tally-row">'+tallyChipsHtml(lead.id)+'</div>'+
+      (lead.notes?'<div class="lead-notes">'+esc(lead.notes)+'</div>':'')+
+      '<div class="lead-actions-row">'+
+        '<button class="text-btn" data-quick-toggle="'+lead.id+'">'+(quickOpen?'Close':'+ Log touch')+'</button>'+
+        '<button class="text-btn" data-respond-toggle="'+lead.id+'">'+(responded?'Undo responded':'Mark responded')+'</button>'+
+        '<button class="text-btn danger" data-delete-lead="'+lead.id+'">Delete</button>'+
+      '</div>'+
+      (quickOpen ? ('<div class="lead-quick-grid">'+core.ACTION_TYPES.map(function(a){
+        return '<button class="lead-quick-btn" data-lead-touch="'+lead.id+'" data-action="'+a.key+'">'+icon(ACTION_ICON[a.key])+'<span>'+esc(a.short)+'</span></button>';
+      }).join('')+'</div>') : '')+
+    '</div>';
+  }
+  function renderPipeline(){
+    var active = core.listLeads();
+    var archived = core.listLeads({includeArchived:true}).filter(function(l){ return l.archived; });
+    var html = '<div id="pipelinePanel">';
+
+    html += '<div class="panel"><div class="panel-head"><h2 class="disp">Add a Lead</h2></div>'+
+      '<div class="add-lead-row"><input type="text" id="leadNameInput" placeholder="Name, e.g. Lead Judge" maxlength="60">'+
+      '<button class="mini-btn" id="leadAddBtn">Add</button></div></div>';
+
+    html += '<div class="panel"><div class="panel-head"><h2 class="disp">Pipeline</h2><span class="eyebrow">'+active.length+' active</span></div>';
+    if(!active.length){ html += '<p class="empty-note">No active leads yet — add one above.</p>'; }
+    else {
+      core.LEAD_STAGES.forEach(function(stage){
+        var inStage = active.filter(function(l){ return l.stage===stage.key; });
+        if(!inStage.length) return;
+        html += '<div class="stage-group"><div class="stage-group-head">'+esc(stage.label)+'<span class="stage-count">'+inStage.length+'</span></div>';
+        inStage.forEach(function(l){ html += leadCardHtml(l); });
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+
+    html += '<div class="panel archive-panel"><button class="archive-toggle" id="archiveToggleBtn">'+icon('i-archive')+
+      '<span>Archive ('+archived.length+')</span><span class="archive-chevron">'+(pipelineArchiveOpen?'▲':'▼')+'</span></button>';
+    if(pipelineArchiveOpen){
+      html += '<div class="archive-body">';
+      if(!archived.length) html += '<p class="empty-note">No archived leads.</p>';
+      else archived.forEach(function(l){ html += leadCardHtml(l); });
+      html += '</div>';
+    }
+    html += '</div>';
+
+    html += '</div>';
+    $('#tabContent').innerHTML = html;
+    bindPipelineEvents();
+  }
+  function bindPipelineEvents(){
+    var panel = $('#pipelinePanel');
+    panel.addEventListener('click', function(e){
+      if(e.target.closest('#leadAddBtn')){
+        var name = $('#leadNameInput').value.trim();
+        if(!name) return;
+        core.addLead({name:name});
+        toast('Lead added');
+        renderPipeline();
+        return;
+      }
+      if(e.target.closest('#archiveToggleBtn')){
+        pipelineArchiveOpen = !pipelineArchiveOpen;
+        renderPipeline();
+        return;
+      }
+      var archiveBtn = e.target.closest('[data-archive-toggle]');
+      if(archiveBtn){
+        var aid = archiveBtn.dataset.archiveToggle;
+        var lead = core.getLead(aid);
+        if(lead.archived){ core.unarchiveLead(aid); toast('Lead restored to pipeline'); }
+        else { core.archiveLead(aid); toast('Lead archived'); }
+        renderPipeline();
+        return;
+      }
+      var quickToggle = e.target.closest('[data-quick-toggle]');
+      if(quickToggle){
+        var qid = quickToggle.dataset.quickToggle;
+        pipelineQuickOpenId = (pipelineQuickOpenId===qid) ? null : qid;
+        renderPipeline();
+        return;
+      }
+      var touchBtn = e.target.closest('[data-lead-touch]');
+      if(touchBtn){
+        var lid = touchBtn.dataset.leadTouch, actionKey = touchBtn.dataset.action;
+        var leadName = core.getLead(lid).name;
+        var res = core.addLeadTouch(lid, {action_type:actionKey});
+        toast(core.actionByKey(actionKey).label+' logged for '+leadName);
+        pipelineQuickOpenId = null;
+        renderHeader();
+        renderPipeline();
+        if(res.newBadges.length){
+          var label = core.listBadges().filter(function(x){return x.key===res.newBadges[0];})[0].label;
+          setTimeout(function(){ toast('Honor bestowed — '+label); }, 900);
+        }
+        return;
+      }
+      var respondBtn = e.target.closest('[data-respond-toggle]');
+      if(respondBtn){
+        var rid = respondBtn.dataset.respondToggle;
+        var fu = core.leadFollowUp(rid);
+        if(fu && fu.status==='responded'){ core.clearLeadResponded(rid); toast('Marked as not yet responded'); }
+        else { core.markLeadResponded(rid); toast('Marked as responded'); }
+        renderPipeline();
+        return;
+      }
+      var delBtn = e.target.closest('[data-delete-lead]');
+      if(delBtn){
+        var did = delBtn.dataset.deleteLead;
+        if(confirm('Delete this lead for good? Their logged touches stay in History, but the lead card itself cannot be recovered.')){
+          core.deleteLead(did);
+          toast('Lead deleted');
+          renderPipeline();
+        }
+        return;
+      }
+    });
+    panel.addEventListener('change', function(e){
+      var sel = e.target.closest('[data-lead-stage]');
+      if(sel){
+        core.setLeadStage(sel.dataset.leadStage, sel.value);
+        toast('Stage updated');
+        renderPipeline();
+      }
+    });
+    var nameInput = $('#leadNameInput');
+    if(nameInput) nameInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ $('#leadAddBtn').click(); } });
+  }
+
   function groupByDay(entries){
     var groups = [], map = {};
     entries.forEach(function(e){
@@ -655,6 +877,7 @@
   function renderAll(){
     renderNav(); renderHeader();
     if(activeTab==='dashboard') renderDashboard();
+    else if(activeTab==='pipeline') renderPipeline();
     else if(activeTab==='history') renderHistory();
     else if(activeTab==='goals') renderGoals();
     else renderBadges();

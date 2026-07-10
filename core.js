@@ -30,6 +30,23 @@
 
   var FUNNEL_STAGES = ["dm", "loom", "call", "client"];
 
+  var LEAD_STAGES = [
+    { key: "new", label: "New" },
+    { key: "dmd", label: "DM'd" },
+    { key: "loom", label: "Loom Sent" },
+    { key: "call", label: "Call Booked" },
+    { key: "client", label: "Client" }
+  ];
+
+  // Which pipeline stage a given touch implies, for auto-advancing a lead
+  // when you log a matching action against them (you can always override
+  // manually — this just saves the click when the obvious thing happens).
+  var STAGE_FOR_ACTION = { dm: "dmd", loom: "loom", call: "call", client: "client", revenue: "client" };
+
+  // Days to wait after the Nth touch before the next follow-up is "due",
+  // indexed by (touch count - 1) and clamped to the last value beyond that.
+  var CADENCE_GAPS = [2, 5, 7, 14];
+
   var DAY = 24 * 60 * 60 * 1000;
 
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
@@ -99,7 +116,8 @@
         dailyGoalDate: todayKey(),
         entries: [],
         badges: {},
-        goals: []
+        goals: [],
+        leads: []
       };
     }
 
@@ -130,6 +148,7 @@
         if (!state.settings) state.settings = defaultSettings();
         if (!state.badges) state.badges = {};
         if (!state.goals) state.goals = [];
+        if (!state.leads) state.leads = [];
         if (!state.pin) state.pin = opts.defaultPin || "1234";
         if (state.dailyGoal == null) state.dailyGoal = opts.defaultDailyGoal != null ? opts.defaultDailyGoal : 0;
         if (!state.dailyGoalDate) state.dailyGoalDate = todayKey();
@@ -346,6 +365,7 @@
         note: input.note || "",
         virtual_value: state.settings[input.action_type] != null ? state.settings[input.action_type] : action.value,
         real_revenue_amount: input.real_revenue_amount != null ? Number(input.real_revenue_amount) : null,
+        lead_id: input.lead_id || null,
         deleted_at: null
       };
       state.entries.push(entry);
@@ -433,6 +453,160 @@
       return { current: current, target: goal.target_value, pct: pct, rangeStart: range[0], rangeEnd: range[1] };
     }
 
+    // ---------- Leads / pipeline ----------
+
+    function getLead(id) { return state.leads.find(function (l) { return l.id === id; }) || null; }
+
+    function listLeads(opts) {
+      opts = opts || {};
+      var list = state.leads.filter(function (l) { return opts.includeArchived ? true : !l.archived; });
+      list.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+      return list;
+    }
+
+    function addLead(input) {
+      var lead = {
+        id: uid(),
+        name: (input.name || "").trim() || "Unnamed lead",
+        notes: input.notes || "",
+        stage: "new",
+        archived: false,
+        created_at: new Date().toISOString(),
+        responded_at: null
+      };
+      state.leads.push(lead);
+      persist();
+      return lead;
+    }
+
+    function updateLead(id, patch) {
+      var l = getLead(id);
+      if (!l) return null;
+      ["name", "notes"].forEach(function (k) { if (patch.hasOwnProperty(k)) l[k] = patch[k]; });
+      persist();
+      return l;
+    }
+
+    function setLeadStage(id, stage) {
+      var l = getLead(id);
+      if (!l) return null;
+      if (!LEAD_STAGES.some(function (s) { return s.key === stage; })) return null;
+      l.stage = stage;
+      persist();
+      return l;
+    }
+
+    function archiveLead(id) {
+      var l = getLead(id);
+      if (!l) return null;
+      l.archived = true;
+      persist();
+      return l;
+    }
+
+    function unarchiveLead(id) {
+      var l = getLead(id);
+      if (!l) return null;
+      l.archived = false;
+      persist();
+      return l;
+    }
+
+    function deleteLead(id) {
+      state.leads = state.leads.filter(function (l) { return l.id !== id; });
+      persist();
+    }
+
+    function markLeadResponded(id) {
+      var l = getLead(id);
+      if (!l) return null;
+      l.responded_at = new Date().toISOString();
+      persist();
+      return l;
+    }
+
+    function clearLeadResponded(id) {
+      var l = getLead(id);
+      if (!l) return null;
+      l.responded_at = null;
+      persist();
+      return l;
+    }
+
+    function leadEntries(id) {
+      return activeEntries()
+        .filter(function (e) { return e.lead_id === id; })
+        .sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
+    }
+
+    function leadTouchCounts(id) {
+      var out = {};
+      ACTION_TYPES.forEach(function (a) { out[a.key] = 0; });
+      leadEntries(id).forEach(function (e) { out[e.action_type] = (out[e.action_type] || 0) + 1; });
+      return out;
+    }
+
+    function leadTouchCount(id) { return leadEntries(id).length; }
+
+    function leadLastTouchDate(id) {
+      var entries = leadEntries(id);
+      return entries.length ? new Date(entries[entries.length - 1].created_at) : null;
+    }
+
+    function leadFirstTouchDate(id) {
+      var entries = leadEntries(id);
+      return entries.length ? new Date(entries[0].created_at) : null;
+    }
+
+    // Status is one of: 'responded', 'no-touches', 'overdue', 'due', 'upcoming'.
+    function leadFollowUp(id) {
+      var l = getLead(id);
+      if (!l) return null;
+      if (l.responded_at) return { status: "responded" };
+      var count = leadTouchCount(id);
+      if (count === 0) return { status: "no-touches" };
+      var last = leadLastTouchDate(id);
+      var gapDays = CADENCE_GAPS[Math.min(count - 1, CADENCE_GAPS.length - 1)];
+      var due = addDays(startOfDay(last), gapDays);
+      var today = startOfDay(new Date());
+      var daysUntil = Math.round((due - today) / DAY);
+      var status = daysUntil < 0 ? "overdue" : (daysUntil === 0 ? "due" : "upcoming");
+      return { status: status, dueDate: due, daysUntil: daysUntil };
+    }
+
+    function leadResponseTimeDays(id) {
+      var l = getLead(id);
+      if (!l || !l.responded_at) return null;
+      var first = leadFirstTouchDate(id);
+      if (!first) return null;
+      return Math.max(0, Math.round((new Date(l.responded_at) - first) / DAY));
+    }
+
+    // Logs a touch against a lead (reuses addEntry so it still counts toward
+    // lifetime points/streak/badges), snapshots the lead's name onto the
+    // entry's contact field, and auto-advances the lead's stage if this
+    // touch implies further progress than where it currently sits.
+    function addLeadTouch(leadId, input) {
+      var l = getLead(leadId);
+      if (!l) throw new Error("Unknown lead: " + leadId);
+      var res = addEntry({
+        action_type: input.action_type,
+        contact: l.name,
+        note: input.note || "",
+        real_revenue_amount: input.real_revenue_amount,
+        lead_id: leadId
+      });
+      var impliedStage = STAGE_FOR_ACTION[input.action_type];
+      if (impliedStage) {
+        var order = LEAD_STAGES.map(function (s) { return s.key; });
+        if (order.indexOf(impliedStage) > order.indexOf(l.stage)) {
+          l.stage = impliedStage;
+          persist();
+        }
+      }
+      return res;
+    }
+
     function hasPin() { return !!state.pin; }
     function verifyPin(pin) { return String(pin) === String(state.pin); }
     function setPin(pin) { state.pin = String(pin); persist(); }
@@ -461,6 +635,7 @@
     return {
       ACTION_TYPES: ACTION_TYPES,
       BADGES: BADGES,
+      LEAD_STAGES: LEAD_STAGES,
       actionByKey: actionByKey,
       getState: function () { return state; },
       addEntry: addEntry,
@@ -480,6 +655,21 @@
       dayTotal: dayTotal,
       isHitDay: isHitDay,
       dailyHistory: dailyHistory,
+      getLead: getLead,
+      listLeads: listLeads,
+      addLead: addLead,
+      updateLead: updateLead,
+      setLeadStage: setLeadStage,
+      archiveLead: archiveLead,
+      unarchiveLead: unarchiveLead,
+      deleteLead: deleteLead,
+      markLeadResponded: markLeadResponded,
+      clearLeadResponded: clearLeadResponded,
+      leadTouchCounts: leadTouchCounts,
+      leadTouchCount: leadTouchCount,
+      leadFollowUp: leadFollowUp,
+      leadResponseTimeDays: leadResponseTimeDays,
+      addLeadTouch: addLeadTouch,
       hasPin: hasPin,
       verifyPin: verifyPin,
       setPin: setPin,
