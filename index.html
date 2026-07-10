@@ -286,7 +286,7 @@
     <div class="fan-divider"><span>◆</span></div>
     <div id="tabContent"></div>
 
-    <footer><button id="resetBtn">reset demo data</button></footer>
+    <footer><button id="resetBtn">reset all data</button></footer>
   </div>
   <nav class="bottom-nav" id="bottomNav"></nav>
 </div>
@@ -590,7 +590,7 @@
     else renderBadges();
   }
 
-  $('#resetBtn').addEventListener('click', function(){ if(confirm('Reset demo data for this variant?')){ core.resetDemoData(); renderAll(); } });
+  $('#resetBtn').addEventListener('click', function(){ if(confirm('Clear all logged activity, badges, and goals? This cannot be undone.')){ core.resetAllData(); renderAll(); } });
 
   renderKeypad(); renderPinDots();
   if(core.isUnlockedThisSession()){ unlockApp(); }

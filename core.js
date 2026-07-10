@@ -67,16 +67,6 @@
   function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
   function addMonths(d, n) { var x = new Date(d); x.setMonth(x.getMonth() + n); return x; }
 
-  // Deterministic PRNG so demo history looks identical across every variant.
-  function mulberry32(seed) {
-    return function () {
-      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
   function uid() {
     return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
@@ -84,62 +74,6 @@
   function actionByKey(key) {
     for (var i = 0; i < ACTION_TYPES.length; i++) if (ACTION_TYPES[i].key === key) return ACTION_TYPES[i];
     return null;
-  }
-
-  function seedDemoData(namespace) {
-    var rand = mulberry32(1337 + hashString(namespace));
-    var entries = [];
-    var today = startOfDay(new Date());
-    var start = addDays(today, -74); // ~10.5 weeks of history
-    var contacts = ["Jordan P.", "Marisol T.", "Devon K.", "Priya S.", "Callum R.", "Naomi W.", "Theo B.", "Sasha L.", "Imani C.", "Rafael G."];
-    var weights = { dm: 10, followup: 6, comment: 5, content: 2, loom: 3, call: 2, client: 0.15, revenue: 0.2 };
-    var keys = Object.keys(weights);
-
-    var day = start;
-    var contentCount = 0;
-    while (day.getTime() <= today.getTime()) {
-      var isWeekend = day.getDay() === 0 || day.getDay() === 6;
-      // Skip a handful of days to leave realistic gaps, but keep the last 4 days
-      // logged so every variant opens on an active streak.
-      var daysAgo = Math.round((today - day) / DAY);
-      var skip = daysAgo > 3 && rand() < (isWeekend ? 0.55 : 0.18);
-      if (!skip) {
-        var count = isWeekend ? Math.floor(rand() * 3) : 1 + Math.floor(rand() * 5);
-        for (var i = 0; i < count; i++) {
-          var roll = rand() * keys.reduce(function (s, k) { return s + weights[k]; }, 0);
-          var acc = 0, chosen = keys[0];
-          for (var k = 0; k < keys.length; k++) {
-            acc += weights[keys[k]];
-            if (roll <= acc) { chosen = keys[k]; break; }
-          }
-          if (chosen === "content") contentCount++;
-          // Cap content early so the "Creator" badge (10 posts) stays a near-miss.
-          if (chosen === "content" && contentCount > 8 && daysAgo > 2) continue;
-          var action = actionByKey(chosen);
-          var ts = new Date(day.getTime() + (9 + rand() * 9) * 60 * 60 * 1000);
-          entries.push({
-            id: uid(),
-            created_at: ts.toISOString(),
-            edited_at: null,
-            action_type: chosen,
-            contact: chosen === "content" || chosen === "comment" ? "" : contacts[Math.floor(rand() * contacts.length)],
-            note: "",
-            virtual_value: action.value,
-            real_revenue_amount: chosen === "revenue" ? Math.round((150 + rand() * 850)) : null,
-            deleted_at: null
-          });
-        }
-      }
-      day = addDays(day, 1);
-    }
-    entries.sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
-    return entries;
-  }
-
-  function hashString(s) {
-    var h = 0;
-    for (var i = 0; i < s.length; i++) { h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; }
-    return h;
   }
 
   function defaultSettings() {
@@ -155,6 +89,17 @@
     var listeners = [];
     var state = null;
 
+    function emptyState() {
+      return {
+        pin: opts.defaultPin || "1234",
+        settings: defaultSettings(),
+        dailyGoal: opts.defaultDailyGoal != null ? opts.defaultDailyGoal : 10,
+        entries: [],
+        badges: {},
+        goals: []
+      };
+    }
+
     function load() {
       var raw;
       try { raw = global.localStorage.getItem(storageKey); } catch (e) { raw = null; }
@@ -162,17 +107,7 @@
         try { state = JSON.parse(raw); } catch (e) { state = null; }
       }
       if (!state) {
-        state = {
-          pin: opts.defaultPin || "1234",
-          settings: defaultSettings(),
-          dailyGoal: opts.defaultDailyGoal != null ? opts.defaultDailyGoal : 10,
-          entries: seedDemoData(namespace),
-          badges: {},
-          goals: [
-            { id: uid(), period: "monthly", target_metric: "dm", target_value: 80, created_at: new Date().toISOString() },
-            { id: uid(), period: "monthly", target_metric: "call", target_value: 10, created_at: new Date().toISOString() }
-          ]
-        };
+        state = emptyState();
         recomputeBadges(state);
         persist();
       } else {
@@ -493,9 +428,10 @@
       try { global.sessionStorage.removeItem(sessionKey); } catch (e) { /* ignore */ }
     }
 
-    function resetDemoData() {
-      state.entries = seedDemoData(namespace);
-      state.badges = {};
+    function resetAllData() {
+      var pin = state.pin;
+      state = emptyState();
+      state.pin = pin;
       recomputeBadges(state);
       persist();
     }
@@ -532,7 +468,7 @@
       isUnlockedThisSession: isUnlockedThisSession,
       markUnlocked: markUnlocked,
       lockSession: lockSession,
-      resetDemoData: resetDemoData,
+      resetAllData: resetAllData,
       subscribe: subscribe
     };
   }
