@@ -89,15 +89,30 @@
     var listeners = [];
     var state = null;
 
+    function todayKey() { return toISODate(startOfDay(new Date())); }
+
     function emptyState() {
       return {
         pin: opts.defaultPin || "1234",
         settings: defaultSettings(),
-        dailyGoal: opts.defaultDailyGoal != null ? opts.defaultDailyGoal : 10,
+        dailyGoal: opts.defaultDailyGoal != null ? opts.defaultDailyGoal : 0,
+        dailyGoalDate: todayKey(),
         entries: [],
         badges: {},
         goals: []
       };
+    }
+
+    // A daily goal only applies to the day it was set on — each new day it
+    // rolls back to 0 so the user consciously sets a fresh target instead of
+    // yesterday's number silently carrying over.
+    function rolloverDailyGoalIfNeeded() {
+      var today = todayKey();
+      if (state.dailyGoalDate !== today) {
+        state.dailyGoal = 0;
+        state.dailyGoalDate = today;
+        persist();
+      }
     }
 
     function load() {
@@ -116,7 +131,9 @@
         if (!state.badges) state.badges = {};
         if (!state.goals) state.goals = [];
         if (!state.pin) state.pin = opts.defaultPin || "1234";
-        if (state.dailyGoal == null) state.dailyGoal = opts.defaultDailyGoal != null ? opts.defaultDailyGoal : 10;
+        if (state.dailyGoal == null) state.dailyGoal = opts.defaultDailyGoal != null ? opts.defaultDailyGoal : 0;
+        if (!state.dailyGoalDate) state.dailyGoalDate = todayKey();
+        rolloverDailyGoalIfNeeded();
       }
     }
 
@@ -140,8 +157,8 @@
       return goal > 0 ? total >= goal : total > 0;
     }
 
-    function getDailyGoal() { return state.dailyGoal || 0; }
-    function setDailyGoal(v) { state.dailyGoal = Math.max(0, Number(v) || 0); persist(); }
+    function getDailyGoal() { rolloverDailyGoalIfNeeded(); return state.dailyGoal || 0; }
+    function setDailyGoal(v) { state.dailyGoal = Math.max(0, Number(v) || 0); state.dailyGoalDate = todayKey(); persist(); }
 
     function dailyHistory(days) {
       var out = [];
@@ -234,6 +251,7 @@
     }
 
     function computeKPIs() {
+      rolloverDailyGoalIfNeeded();
       var now = new Date();
       var ws = startOfWeek(now), we = addDays(ws, 7);
       return {

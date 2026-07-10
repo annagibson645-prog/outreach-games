@@ -429,14 +429,16 @@
 
   function dailyPanelInner(kpi){
     var goal = kpi.dailyGoal;
-    var hit = kpi.todayHit;
+    var hit = kpi.todayHit && goal > 0;
     var remaining = Math.max(0, goal - kpi.todayTotal);
-    return '<div class="panel-head"><h2 class="disp">Today</h2><span class="eyebrow">Your daily goal</span></div>'+
+    var statusClass = goal<=0 ? '' : (hit?'hit':'miss');
+    var statusText = goal<=0 ? 'Set a goal for today' : (hit?'Goal hit ✓':remaining+' to go');
+    return '<div class="panel-head"><h2 class="disp">Today</h2><span class="eyebrow">Your daily goal · resets every morning</span></div>'+
       '<div class="daily-row"><div class="daily-num" id="todayNum">'+kpi.todayTotal+'<span class="of">/ '+goal+'</span></div>'+
-      '<div class="daily-status '+(hit?'hit':'miss')+'" id="todayStatus">'+(goal<=0?'No goal set':(hit?'Goal hit ✓':remaining+' to go'))+'</div></div>'+
+      '<div class="daily-status '+statusClass+'" id="todayStatus">'+statusText+'</div></div>'+
       '<div class="daily-track"><div class="daily-fill'+(hit?' hit':'')+'" id="todayFill" style="width:'+(goal>0?Math.min(100,Math.round(kpi.todayTotal/goal*100)):0)+'%"></div></div>'+
-      '<div class="daily-edit"><button class="text-btn" id="editGoalBtn">Edit daily goal</button>'+
-      '<div class="daily-edit-form" id="goalEditForm" hidden><input type="number" id="goalEditInput" min="0" step="1" value="'+goal+'">'+
+      '<div class="daily-edit"><button class="text-btn" id="editGoalBtn">'+(goal<=0?"Set today's goal":'Edit daily goal')+'</button>'+
+      '<div class="daily-edit-form" id="goalEditForm" hidden><input type="number" id="goalEditInput" min="0" step="1" value="'+(goal>0?goal:'')+'" placeholder="e.g. 20">'+
       '<button class="mini-btn" id="goalEditSave">Save</button><button class="mini-btn ghost" id="goalEditCancel">Cancel</button></div></div>';
   }
   function refreshDailyPanel(){
