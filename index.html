@@ -158,10 +158,18 @@
   .daily-fill{height:100%; background:var(--gold); transition:width .6s cubic-bezier(.16,1,.3,1);}
   .daily-fill.hit{background:var(--gold-bright);}
   .daily-edit{display:flex; flex-direction:column; align-items:center; gap:10px;}
+  #editGoalBtn{
+    -webkit-appearance:none; appearance:none; background:none; color:var(--gold);
+    border:1px solid var(--border-strong); border-radius:20px; cursor:pointer;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase; font-family:'EB Garamond';
+    padding:11px 22px; min-height:44px; touch-action:manipulation;
+  }
+  #editGoalBtn:hover, #editGoalBtn:active{background:var(--emerald2); border-color:var(--gold);}
   .daily-edit-form{display:flex; gap:8px; align-items:center;}
   .daily-edit-form[hidden]{display:none;}
-  .daily-edit-form input{width:80px; background:var(--emerald2); border:1px solid var(--border); color:var(--cream); padding:8px 10px; text-align:center; font-size:13px;}
+  .daily-edit-form input{width:80px; background:var(--emerald2); border:1px solid var(--border); color:var(--cream); padding:8px 10px; text-align:center; font-size:13px; min-height:44px;}
   .daily-edit-form input:focus{outline:none; border-color:var(--gold);}
+  .daily-edit-form .mini-btn{min-height:44px;}
 
   .stat-row{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; margin-bottom:22px; background:var(--border); border:1px solid var(--border);}
   @media (max-width:640px){.stat-row{grid-template-columns:1fr;}}
@@ -443,20 +451,27 @@
   }
   function refreshDailyPanel(){
     $('#dailyPanel').innerHTML = dailyPanelInner(core.computeKPIs());
-    bindDailyPanel();
   }
+  // Delegated on the panel itself (never replaced, only its innerHTML is)
+  // so this binds exactly once and keeps working no matter how many times
+  // refreshDailyPanel() swaps the buttons/form out underneath it.
   function bindDailyPanel(){
-    $('#editGoalBtn').addEventListener('click', function(){
-      $('#goalEditForm').hidden = false; $('#editGoalBtn').hidden = true;
-      $('#goalEditInput').focus();
-    });
-    $('#goalEditCancel').addEventListener('click', function(){
-      $('#goalEditForm').hidden = true; $('#editGoalBtn').hidden = false;
-    });
-    $('#goalEditSave').addEventListener('click', function(){
-      core.setDailyGoal($('#goalEditInput').value);
-      toast('Daily goal updated');
-      renderHeader(); refreshDailyPanel(); renderChart();
+    $('#dailyPanel').addEventListener('click', function(e){
+      if(e.target.closest('#editGoalBtn')){
+        $('#goalEditForm').hidden = false; $('#editGoalBtn').hidden = true;
+        $('#goalEditInput').focus();
+        return;
+      }
+      if(e.target.closest('#goalEditCancel')){
+        $('#goalEditForm').hidden = true; $('#editGoalBtn').hidden = false;
+        return;
+      }
+      if(e.target.closest('#goalEditSave')){
+        core.setDailyGoal($('#goalEditInput').value);
+        toast('Daily goal updated');
+        renderHeader(); refreshDailyPanel(); renderChart();
+        return;
+      }
     });
   }
 
