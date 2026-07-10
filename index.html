@@ -25,6 +25,28 @@
     --chart-grid:var(--border);
     --chart-text:var(--dim);
     --miss:#5a6790;
+    --danger:var(--danger);
+    --flash:#2c250f;
+    --focus-ring:rgba(201,162,75,0.2);
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --emerald:#efe3c8;
+    --emerald2:#e4d3a9;
+    --panel:#f8f0da;
+    --cream:#2f2313;
+    --dim:#7a6b4c;
+    --dim2:#a3906a;
+    --border:rgba(43,86,163,0.22);
+    --border-strong:rgba(43,86,163,0.42);
+    --gold:#2b56a3;
+    --gold-bright:#3d6cc4;
+    --gold-ink:#f8f0da;
+    --miss:#b6a67d;
+    --danger:#b5432c;
+    --flash:#cfe0f7;
+    --focus-ring:rgba(43,86,163,0.2);
+    color-scheme:light;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -40,6 +62,15 @@
 
   .wrap{max-width:960px; margin:0 auto; padding:38px 24px 100px; position:relative; z-index:1;}
 
+  .theme-toggle{
+    position:fixed; top:16px; right:16px; z-index:600; width:38px; height:38px; border-radius:50%;
+    background:var(--panel); border:1px solid var(--border-strong); color:var(--gold); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:all .15s;
+  }
+  .theme-toggle:hover{border-color:var(--gold); color:var(--gold-bright);}
+  .theme-toggle svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+  .theme-toggle:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
   #pin-gate{position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; background:var(--emerald); padding:24px;}
   .access-card{max-width:380px; width:100%; background:var(--panel); border:1px solid var(--border-strong); box-shadow:0 0 0 6px var(--emerald), 0 0 0 7px var(--border); padding:42px 34px; text-align:center;}
   .access-card .orn{font-size:22px; color:var(--gold); margin-bottom:12px; letter-spacing:0.4em;}
@@ -54,7 +85,7 @@
   .key:active{transform:scale(.96);}
   .key.wide{grid-column:span 3; background:var(--gold); color:var(--gold-ink); border-color:var(--gold); letter-spacing:0.1em; font-style:italic;}
   .pin-hint{margin-top:20px; font-size:11px; color:var(--dim2);}
-  .pin-error{color:#d97a5f; font-size:11px; margin-top:12px; min-height:14px;}
+  .pin-error{color:var(--danger); font-size:11px; margin-top:12px; min-height:14px;}
 
   #app[hidden]{display:none;}
   .masthead{text-align:center; margin-bottom:6px;}
@@ -111,7 +142,7 @@
   .deco-tile .lb{font-size:12.5px; display:block; margin-bottom:5px; color:var(--gold-bright);}
   .deco-tile .pt{font-family:'Cormorant Garamond'; font-style:italic; font-size:14px; color:var(--gold-bright);}
   .deco-tile.flash{animation:tf .5s ease;}
-  @keyframes tf{0%{background:#2c250f;}100%{background:var(--emerald2);}}
+  @keyframes tf{0%{background:var(--flash);}100%{background:var(--emerald2);}}
 
   #toast{position:fixed; top:22px; left:50%; transform:translateX(-50%) translateY(-160%); z-index:900; background:var(--gold); color:var(--gold-ink); padding:12px 22px; font-size:12.5px; font-style:italic; font-family:'Cormorant Garamond'; font-weight:600; transition:transform .4s cubic-bezier(.16,1,.3,1); pointer-events:none;}
   #toast.show{transform:translateX(-50%) translateY(0);}
@@ -204,7 +235,7 @@
   .entry-row .actions{display:flex; gap:14px;}
   .text-btn{background:none; border:none; color:var(--dim); font-size:10.5px; cursor:pointer; text-transform:uppercase; letter-spacing:0.06em; padding:4px 0; border-bottom:1px solid transparent;}
   .text-btn:hover{color:var(--gold-bright); border-color:var(--gold);}
-  .text-btn.danger:hover{color:#d97a5f; border-color:#d97a5f;}
+  .text-btn.danger:hover{color:var(--danger); border-color:var(--danger);}
   .mini-btn{background:var(--gold); color:var(--gold-ink); border:none; border-radius:0; padding:9px 18px; font-size:11px; cursor:pointer; font-family:'Cormorant Garamond'; font-style:italic; font-weight:600;}
   .mini-btn.ghost{background:none; color:var(--dim); border:1px solid var(--border-strong);}
   .empty-note{color:var(--dim2); font-size:12px; padding:16px 4px; text-align:center;}
@@ -213,7 +244,7 @@
   .field label{font-size:9.5px; color:var(--dim2); letter-spacing:0.1em; text-transform:uppercase;}
   .field input, .field select{background:var(--emerald2); border:1px solid var(--border); color:var(--cream); padding:10px 12px; border-radius:0; font-size:12.5px; min-height:40px; appearance:none; font-family:'EB Garamond';}
   .field select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239db3a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px;}
-  .field input:focus, .field select:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,162,75,0.2);}
+  .field input:focus, .field select:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 2px var(--focus-ring);}
   .edit-form{grid-column:1/-1; display:grid; gap:12px; background:var(--emerald2); border:1px solid var(--gold); border-radius:0; padding:16px; margin:4px 0;}
   .edit-form .row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   @media (max-width:520px){.edit-form .row{grid-template-columns:1fr;}}
@@ -239,6 +270,8 @@
 </head>
 <body>
 
+<button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle light/dark mode"></button>
+
 <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
 <defs>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></symbol>
@@ -255,6 +288,8 @@
   <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M8 12.5l-2 8 6-3 6 3-2-8"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12,3 15,10 22,10.5 16.5,15 18.5,22 12,17.8 5.5,22 7.5,15 2,10.5 9,10"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></symbol>
 </defs>
 </svg>
 
@@ -312,6 +347,24 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function fmtDate(iso){ var d=new Date(iso); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }
   function icon(key){ return '<svg class="icon"><use href="#'+key+'"/></svg>'; }
+
+  var THEME_KEY = 'outreach:theme';
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    $('#themeToggle').innerHTML = icon(t==='light' ? 'i-sun' : 'i-moon');
+  }
+  function getSavedTheme(){
+    try { return localStorage.getItem(THEME_KEY); } catch(e){ return null; }
+  }
+  function setTheme(t){
+    try { localStorage.setItem(THEME_KEY, t); } catch(e){ /* ignore */ }
+    applyTheme(t);
+  }
+  applyTheme(getSavedTheme() || 'dark');
+  $('#themeToggle').addEventListener('click', function(){
+    var current = document.documentElement.getAttribute('data-theme') || 'dark';
+    setTheme(current==='light' ? 'dark' : 'light');
+  });
 
   function renderKeypad(){
     var keys=['1','2','3','4','5','6','7','8','9','del','0','go'];
