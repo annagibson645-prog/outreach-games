@@ -25,9 +25,12 @@
     --chart-grid:var(--border);
     --chart-text:var(--dim);
     --miss:#5a6790;
-    --danger:var(--danger);
+    --danger:#d97a5f;
     --flash:#2c250f;
     --focus-ring:rgba(201,162,75,0.2);
+    --tier-easy:#5fae6e;
+    --tier-medium:#5b8fd9;
+    --tier-hard:#c9564a;
     color-scheme:dark;
   }
   :root[data-theme="light"]{
@@ -46,6 +49,9 @@
     --danger:#b5432c;
     --flash:#cfe0f7;
     --focus-ring:rgba(43,86,163,0.2);
+    --tier-easy:#3f7d4a;
+    --tier-medium:#2f5fa8;
+    --tier-hard:#8a2f2f;
     color-scheme:light;
   }
   *{box-sizing:border-box;}
@@ -211,19 +217,64 @@
   .oc-funnel-count{font-size:13px; text-align:right; font-family:'Cormorant Garamond'; font-style:italic; color:var(--gold-bright);}
   .oc-funnel-rate{margin:0 0 4px 56px; font-size:9.5px; color:var(--gold); font-style:italic; font-family:'Cormorant Garamond'; width:fit-content;}
 
-  .badge-strip{display:flex; gap:16px; flex-wrap:wrap; justify-content:center;}
   .diamond{width:38px; height:38px; border:1.3px solid var(--border-strong); transform:rotate(45deg); display:flex; align-items:center; justify-content:center; color:var(--dim2); flex:none;}
   .diamond .inner{transform:rotate(-45deg); display:flex;}
   .diamond.unlocked{background:var(--gold); border-color:var(--gold); color:var(--gold-ink);}
   .diamond svg{width:15px;height:15px;}
 
+  /* tier markers: green circle / blue square / garnet diamond — same trail-
+     difficulty language as the honors field guide, so easy/medium/hard read
+     at a glance without relying on color alone. */
+  .marker{flex:none; display:inline-block; width:11px; height:11px;}
+  .marker.easy{background:var(--tier-easy); border-radius:50%;}
+  .marker.medium{background:var(--tier-medium); border-radius:2px;}
+  .marker.hard{background:var(--tier-hard); transform:rotate(45deg); border-radius:2px;}
+
+  .tier-summary-row{display:flex; gap:10px; margin-bottom:14px;}
+  .tier-chip{display:flex; align-items:center; gap:8px; background:var(--emerald2); border:1px solid var(--border); border-radius:3px; padding:8px 14px; flex:1;}
+  .tier-chip-count{font-family:'Cormorant Garamond'; font-style:italic; font-weight:600; font-size:15px;}
+  .honors-recent{font-size:12px; color:var(--dim); margin-bottom:12px;}
+  .honors-recent b{color:var(--gold-bright); font-family:'Cormorant Garamond'; font-style:italic; font-weight:600;}
+
+  .tier-panel-head{display:flex; align-items:flex-start; gap:12px; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border);}
+  .tier-panel-head .marker{width:18px; height:18px; margin-top:8px;}
+  .tier-panel-head h2{margin:0 0 4px;}
+  .tier-sub{margin:0; font-size:11.5px; color:var(--dim2);}
+  .tier-count{margin-left:auto; white-space:nowrap;}
+
+  .cat-group{margin-bottom:22px;}
+  .cat-group:last-child{margin-bottom:0;}
+  .cat-label{font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--dim2); margin:0 0 10px; padding-bottom:6px; border-bottom:1px dashed var(--border);}
+
   .badge-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
   @media (max-width:640px){.badge-grid{grid-template-columns:1fr;}}
-  .badge-card{background:var(--emerald2); border:1px solid var(--border); border-radius:var(--radius); padding:18px; display:flex; gap:16px; align-items:flex-start;}
+  .badge-card{position:relative; background:var(--emerald2); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px 16px 20px; display:flex; gap:14px; align-items:flex-start;}
+  .badge-card::before{content:""; position:absolute; left:0; top:12px; bottom:12px; width:3px; border-radius:2px; background:var(--border-strong);}
+  .badge-card.tier-easy::before{background:var(--tier-easy);}
+  .badge-card.tier-medium::before{background:var(--tier-medium);}
+  .badge-card.tier-hard::before{background:var(--tier-hard);}
   .badge-card.unlocked{border-color:var(--border-strong);}
-  .badge-card h3{font-size:15px; margin:0 0 4px; font-family:'Cormorant Garamond'; font-style:italic; font-weight:600;}
-  .badge-card p{font-size:12px; margin:0; color:var(--dim); line-height:1.55;}
+  .badge-card h3{font-size:14.5px; margin:0 0 4px; font-family:'Cormorant Garamond'; font-style:italic; font-weight:600;}
+  .badge-card p{font-size:11.5px; margin:0; color:var(--dim); line-height:1.5;}
   .badge-card .when{font-size:10px; color:var(--gold); margin-top:7px; font-style:italic; font-family:'Cormorant Garamond';}
+
+  /* ---------- Badge unlock celebration ---------- */
+  .badge-unlock-overlay{position:fixed; inset:0; z-index:800; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(5,8,20,0.6); opacity:0; pointer-events:none; transition:opacity .25s ease; cursor:pointer;}
+  .badge-unlock-overlay.show{opacity:1; pointer-events:auto;}
+  .badge-unlock-card{position:relative; background:var(--panel); border:1px solid var(--gold); border-radius:4px; padding:40px 36px; text-align:center; max-width:300px; width:100%; transform:scale(.82); opacity:0; transition:transform .45s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;}
+  .badge-unlock-overlay.show .badge-unlock-card{transform:scale(1); opacity:1;}
+  .badge-unlock-burst{position:absolute; inset:-60px; border-radius:50%; background:radial-gradient(circle, rgba(201,162,75,0.4), transparent 65%); opacity:0;}
+  .badge-unlock-overlay.show .badge-unlock-burst{animation:badgeBurst 1.2s ease-out;}
+  @keyframes badgeBurst{0%{opacity:0; transform:scale(.35);}35%{opacity:1;}100%{opacity:0; transform:scale(1.6);}}
+  .badge-unlock-diamond{width:64px; height:64px; margin:0 auto 20px; background:var(--gold); transform:rotate(45deg); display:flex; align-items:center; justify-content:center; box-shadow:0 0 34px rgba(201,162,75,0.55);}
+  .badge-unlock-diamond svg{transform:rotate(-45deg); width:26px; height:26px; color:var(--gold-ink);}
+  .badge-unlock-tier{font-size:10px; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:7px;}
+  .badge-unlock-tier.easy{color:var(--tier-easy);}
+  .badge-unlock-tier.medium{color:var(--tier-medium);}
+  .badge-unlock-tier.hard{color:var(--tier-hard);}
+  .badge-unlock-name{font-family:'Cormorant Garamond'; font-style:italic; font-weight:600; font-size:25px; margin-bottom:8px; text-wrap:balance;}
+  .badge-unlock-desc{font-size:12px; color:var(--dim); line-height:1.5;}
+  .badge-unlock-hint{margin-top:18px; font-size:9.5px; color:var(--dim2); letter-spacing:0.08em; text-transform:uppercase;}
 
   .day-group{margin-bottom:8px;}
   .day-header{display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:14px 4px 8px; border-bottom:1px solid var(--border-strong);}
@@ -396,6 +447,17 @@
 
 <div id="toast"></div>
 
+<div id="badgeUnlockOverlay" class="badge-unlock-overlay" hidden>
+  <div class="badge-unlock-card">
+    <div class="badge-unlock-burst"></div>
+    <div class="badge-unlock-diamond"><svg class="icon"><use href="#i-star"/></svg></div>
+    <div class="badge-unlock-tier" id="badgeUnlockTier"></div>
+    <div class="badge-unlock-name" id="badgeUnlockName"></div>
+    <div class="badge-unlock-desc" id="badgeUnlockDesc"></div>
+    <div class="badge-unlock-hint">Tap anywhere to dismiss</div>
+  </div>
+</div>
+
 <script src="core.js"></script>
 <script src="charts.js"></script>
 <script>
@@ -467,6 +529,38 @@
 
   var toastTimer=null;
   function toast(msg){ var t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},1700); }
+
+  var TIER_UNLOCK_LABEL = {easy:'Green — Easy Honor', medium:'Blue — Medium Honor', hard:'Black — Hard Honor'};
+  var unlockQueue = [];
+  var unlockShowing = false;
+  function queueBadgeUnlocks(keys){
+    if(!keys || !keys.length) return;
+    keys.forEach(function(k){ unlockQueue.push(k); });
+    processUnlockQueue();
+  }
+  function processUnlockQueue(){
+    if(unlockShowing || !unlockQueue.length) return;
+    var key = unlockQueue.shift();
+    var b = core.listBadges().find(function(x){ return x.key===key; });
+    if(!b){ processUnlockQueue(); return; }
+    unlockShowing = true;
+    var overlay = $('#badgeUnlockOverlay');
+    var tierEl = $('#badgeUnlockTier');
+    tierEl.className = 'badge-unlock-tier '+b.tier;
+    tierEl.innerHTML = '<span class="marker '+b.tier+'"></span>'+esc(TIER_UNLOCK_LABEL[b.tier]||'Honor');
+    $('#badgeUnlockName').textContent = b.label;
+    $('#badgeUnlockDesc').textContent = b.desc;
+    overlay.hidden = false;
+    requestAnimationFrame(function(){ overlay.classList.add('show'); });
+    var dismissTimer = setTimeout(dismiss, 2800);
+    function dismiss(){
+      clearTimeout(dismissTimer);
+      overlay.removeEventListener('click', dismiss);
+      overlay.classList.remove('show');
+      setTimeout(function(){ overlay.hidden = true; unlockShowing = false; processUnlockQueue(); }, 320);
+    }
+    overlay.addEventListener('click', dismiss);
+  }
 
   function renderNav(){
     $('#tabs').innerHTML = TABS.map(function(t){ return '<button data-tab="'+t.key+'" class="'+(t.key===activeTab?'active':'')+'">'+t.label+'</button>'; }).join('');
@@ -558,10 +652,11 @@
 
     html += '<div class="panel"><div class="panel-head"><h2 class="disp">Conversion Funnel</h2></div><div id="kpiFunnel"></div></div>';
 
-    html += '<div class="panel"><div class="panel-head"><h2 class="disp">Honors</h2><span class="eyebrow">'+core.listBadges().filter(function(b){return b.unlocked;}).length+' of 8 earned</span></div><div class="badge-strip" id="badgeStrip"></div></div>';
+    html += honorsSummaryHtml();
 
     $('#tabContent').innerHTML = html;
-    bindDailyPanel(); renderChart(); renderFunnel(); renderBadgeStrip();
+    bindDailyPanel(); renderChart(); renderFunnel();
+    bindHonorsSummary();
 
     $('#actionGrid').addEventListener('click', function(e){
       var b = e.target.closest('.deco-tile'); if(!b) return;
@@ -574,11 +669,10 @@
       OutreachCharts.countUp($('#statWeek'), k2.thisWeekTotal);
       OutreachCharts.countUp($('#statLife'), k2.lifetimePoints);
       $('#statStreak').textContent = k2.streak+' d';
-      refreshDailyPanel(); renderChart(); renderFunnel(); renderBadgeStrip();
-      if(res.newBadges.length){
-        var label = core.listBadges().filter(function(x){return x.key===res.newBadges[0];})[0].label;
-        setTimeout(function(){ toast('Honor bestowed — '+label); }, 1000);
-      }
+      refreshDailyPanel(); renderChart(); renderFunnel();
+      $('#honorsSummary').outerHTML = honorsSummaryHtml();
+      bindHonorsSummary();
+      queueBadgeUnlocks(res.newBadges);
     });
     $('#trendSeg').addEventListener('click', function(e){
       var b = e.target.closest('button'); if(!b) return;
@@ -603,11 +697,25 @@
       {label:'Call', count:f.counts.call}, {label:'Close', count:f.counts.client}
     ]);
   }
-  function renderBadgeStrip(){
+  function honorsSummaryHtml(){
     var badges = core.listBadges();
-    $('#badgeStrip').innerHTML = badges.map(function(b){
-      return '<div class="diamond'+(b.unlocked?' unlocked':'')+'" title="'+esc(b.label)+(b.unlocked?' — unlocked':' — locked')+'"><span class="inner">'+icon(b.unlocked?'i-star':'i-lock')+'</span></div>';
-    }).join('');
+    var byTier = {easy:{total:0,unlocked:0}, medium:{total:0,unlocked:0}, hard:{total:0,unlocked:0}};
+    badges.forEach(function(b){ byTier[b.tier].total++; if(b.unlocked) byTier[b.tier].unlocked++; });
+    var unlockedBadges = badges.filter(function(b){ return b.unlocked; });
+    var recent = unlockedBadges.sort(function(a,b){ return new Date(b.unlockedAt)-new Date(a.unlockedAt); })[0];
+    return '<div class="panel" id="honorsSummary"><div class="panel-head"><h2 class="disp">Honors</h2><span class="eyebrow">'+unlockedBadges.length+' of '+badges.length+' earned</span></div>'+
+      '<div class="tier-summary-row">'+
+        ['easy','medium','hard'].map(function(t){
+          return '<div class="tier-chip tier-'+t+'"><span class="marker '+t+'"></span><span class="tier-chip-count">'+byTier[t].unlocked+'/'+byTier[t].total+'</span></div>';
+        }).join('')+
+      '</div>'+
+      (recent ? '<div class="honors-recent">Most recent — <b>'+esc(recent.label)+'</b></div>' : '<p class="empty-note">No honors yet — start logging to earn your first.</p>')+
+      '<button class="text-btn" id="viewAllHonorsBtn">View all honors →</button>'+
+    '</div>';
+  }
+  function bindHonorsSummary(){
+    var btn = $('#viewAllHonorsBtn');
+    if(btn) btn.addEventListener('click', function(){ activeTab='badges'; renderAll(); window.scrollTo({top:0,behavior:'smooth'}); });
   }
 
   var pipelineQuickOpenId = null;
@@ -698,9 +806,10 @@
       if(e.target.closest('#leadAddBtn')){
         var name = $('#leadNameInput').value.trim();
         if(!name) return;
-        core.addLead({name:name});
+        var addRes = core.addLead({name:name});
         toast('Lead added');
-        renderPipeline();
+        renderHeader(); renderPipeline();
+        queueBadgeUnlocks(addRes.newBadges);
         return;
       }
       if(e.target.closest('#archiveToggleBtn')){
@@ -712,9 +821,10 @@
       if(archiveBtn){
         var aid = archiveBtn.dataset.archiveToggle;
         var lead = core.getLead(aid);
-        if(lead.archived){ core.unarchiveLead(aid); toast('Lead restored to pipeline'); }
-        else { core.archiveLead(aid); toast('Lead archived'); }
-        renderPipeline();
+        var archRes = lead.archived ? core.unarchiveLead(aid) : core.archiveLead(aid);
+        toast(lead.archived ? 'Lead restored to pipeline' : 'Lead archived');
+        renderHeader(); renderPipeline();
+        queueBadgeUnlocks(archRes.newBadges);
         return;
       }
       var quickToggle = e.target.closest('[data-quick-toggle]');
@@ -733,19 +843,17 @@
         pipelineQuickOpenId = null;
         renderHeader();
         renderPipeline();
-        if(res.newBadges.length){
-          var label = core.listBadges().filter(function(x){return x.key===res.newBadges[0];})[0].label;
-          setTimeout(function(){ toast('Honor bestowed — '+label); }, 900);
-        }
+        queueBadgeUnlocks(res.newBadges);
         return;
       }
       var respondBtn = e.target.closest('[data-respond-toggle]');
       if(respondBtn){
         var rid = respondBtn.dataset.respondToggle;
         var fu = core.leadFollowUp(rid);
-        if(fu && fu.status==='responded'){ core.clearLeadResponded(rid); toast('Marked as not yet responded'); }
-        else { core.markLeadResponded(rid); toast('Marked as responded'); }
-        renderPipeline();
+        var respRes = (fu && fu.status==='responded') ? core.clearLeadResponded(rid) : core.markLeadResponded(rid);
+        toast(fu && fu.status==='responded' ? 'Marked as not yet responded' : 'Marked as responded');
+        renderHeader(); renderPipeline();
+        queueBadgeUnlocks(respRes.newBadges);
         return;
       }
       var delBtn = e.target.closest('[data-delete-lead]');
@@ -754,7 +862,7 @@
         if(confirm('Delete this lead for good? Their logged touches stay in History, but the lead card itself cannot be recovered.')){
           core.deleteLead(did);
           toast('Lead deleted');
-          renderPipeline();
+          renderHeader(); renderPipeline();
         }
         return;
       }
@@ -762,9 +870,10 @@
     panel.addEventListener('change', function(e){
       var sel = e.target.closest('[data-lead-stage]');
       if(sel){
-        core.setLeadStage(sel.dataset.leadStage, sel.value);
+        var stageRes = core.setLeadStage(sel.dataset.leadStage, sel.value);
         toast('Stage updated');
-        renderPipeline();
+        renderHeader(); renderPipeline();
+        queueBadgeUnlocks(stageRes.newBadges);
       }
     });
     var nameInput = $('#leadNameInput');
@@ -863,14 +972,33 @@
     });
   }
 
+  var TIER_INFO = {
+    easy: {label:'Green — Easy', sub:'Usually within your first week of real use.'},
+    medium: {label:'Blue — Medium', sub:'Weeks to a couple of months of consistent effort.'},
+    hard: {label:'Black — Hard', sub:'Months of genuinely sustained work.'}
+  };
+  function badgeCardHtml(b){
+    return '<div class="badge-card tier-'+b.tier+(b.unlocked?' unlocked':'')+'"><div class="diamond'+(b.unlocked?' unlocked':'')+'"><span class="inner">'+icon(b.unlocked?'i-star':'i-lock')+'</span></div>'+
+      '<div><h3>'+esc(b.label)+'</h3><p>'+esc(b.desc)+'</p>'+(b.unlocked?'<div class="when">Bestowed '+fmtDate(b.unlockedAt)+'</div>':'')+'</div></div>';
+  }
   function renderBadges(){
     var badges = core.listBadges();
-    var html = '<div class="panel"><div class="panel-head"><h2 class="disp">Honors</h2></div><div class="badge-grid">';
-    badges.forEach(function(b){
-      html += '<div class="badge-card'+(b.unlocked?' unlocked':'')+'"><div class="diamond'+(b.unlocked?' unlocked':'')+'"><span class="inner">'+icon(b.unlocked?'i-star':'i-lock')+'</span></div>'+
-        '<div><h3>'+esc(b.label)+'</h3><p>'+esc(b.desc)+'</p>'+(b.unlocked?'<div class="when">Bestowed '+fmtDate(b.unlockedAt)+'</div>':'')+'</div></div>';
+    var html = '';
+    ['easy','medium','hard'].forEach(function(tierKey){
+      var inTier = badges.filter(function(b){ return b.tier===tierKey; });
+      var unlockedCount = inTier.filter(function(b){ return b.unlocked; }).length;
+      var byCat = {}, catOrder = [];
+      inTier.forEach(function(b){ if(!byCat[b.category]){ byCat[b.category]=[]; catOrder.push(b.category); } byCat[b.category].push(b); });
+      html += '<div class="panel tier-panel tier-'+tierKey+'"><div class="tier-panel-head"><span class="marker '+tierKey+'"></span>'+
+        '<div><h2 class="disp">'+TIER_INFO[tierKey].label+'</h2><p class="tier-sub">'+TIER_INFO[tierKey].sub+'</p></div>'+
+        '<span class="eyebrow tier-count">'+unlockedCount+' of '+inTier.length+'</span></div>';
+      catOrder.forEach(function(cat){
+        html += '<div class="cat-group"><div class="cat-label">'+esc(cat)+'</div><div class="badge-grid">';
+        byCat[cat].forEach(function(b){ html += badgeCardHtml(b); });
+        html += '</div></div>';
+      });
+      html += '</div>';
     });
-    html += '</div></div>';
     $('#tabContent').innerHTML = html;
   }
 

@@ -17,15 +17,118 @@
     { key: "revenue", label: "Real Revenue", short: "Revenue", value: 100, icon: "◆" }
   ];
 
-  var BADGES = [
-    { key: "first_blood", label: "First Blood", desc: "Log your very first action." },
-    { key: "foot_in_door", label: "Foot in the Door", desc: "Log your first follow-up." },
-    { key: "on_the_board", label: "On the Board", desc: "Log your first sales call." },
-    { key: "closer", label: "Closer", desc: "Log your first new client." },
-    { key: "consistency_streak", label: "Consistency Streak", desc: "Log something 7 days in a row." },
-    { key: "century_club", label: "Century Club", desc: "Reach 1,000 lifetime points." },
-    { key: "creator", label: "Creator", desc: "Log 10 content posts." },
-    { key: "big_week", label: "Big Week", desc: "Score 300+ points in a single week." }
+  // Tiers are graded like ski trails: easy (green circle) usually falls
+  // within a first week of real use, medium (blue square) takes weeks to a
+  // couple of months of consistent effort, hard (black diamond) takes
+  // months of genuinely sustained work. Every test() reads only from the
+  // precomputed metrics object `m` (see computeBadgeMetrics) so this list
+  // stays pure data-plus-a-one-liner, however large it grows.
+  var BADGE_DEFS = [
+    // ---- EASY ----
+    { key: "first_contact", tier: "easy", category: "Milestone", label: "First Contact", desc: "Log your first DM.", test: function (m) { return m.counts.dm >= 1; } },
+    { key: "foot_in_door", tier: "easy", category: "Milestone", label: "Foot in the Door", desc: "Log your first follow-up.", test: function (m) { return m.counts.followup >= 1; } },
+    { key: "lights_camera", tier: "easy", category: "Milestone", label: "Lights, Camera", desc: "Send your first Loom.", test: function (m) { return m.counts.loom >= 1; } },
+    { key: "dial_tone", tier: "easy", category: "Milestone", label: "Dial Tone", desc: "Log your first sales call.", test: function (m) { return m.counts.call >= 1; } },
+    { key: "first_blood", tier: "easy", category: "Milestone", label: "First Blood", desc: "Close your first client.", test: function (m) { return m.counts.client >= 1; } },
+    { key: "publisher", tier: "easy", category: "Milestone", label: "Publisher", desc: "Post your first piece of content.", test: function (m) { return m.counts.content >= 1; } },
+    { key: "joined_chat", tier: "easy", category: "Milestone", label: "Joined the Chat", desc: "Log your first comment.", test: function (m) { return m.counts.comment >= 1; } },
+    { key: "first_dollar", tier: "easy", category: "Milestone", label: "First Dollar", desc: "Log your first revenue entry.", test: function (m) { return m.counts.revenue >= 1; } },
+    { key: "welcome_pipeline", tier: "easy", category: "Pipeline", label: "Welcome to the Pipeline", desc: "Add your first lead.", test: function (m) { return m.leadsAddedTotal >= 1; } },
+    { key: "level_up", tier: "easy", category: "Pipeline", label: "Level Up", desc: "Move a lead forward a stage for the first time.", test: function (m) { return m.leadsAdvancedTotal >= 1; } },
+    { key: "fresh_start", tier: "easy", category: "Pipeline", label: "Fresh Start", desc: "Archive your first lead.", test: function (m) { return m.leadsArchivedCount >= 1; } },
+    { key: "they_noticed", tier: "easy", category: "Pipeline", label: "They Noticed", desc: "Get your first lead to respond.", test: function (m) { return m.leadsRespondedCount >= 1; } },
+    { key: "quick_draw", tier: "easy", category: "Pipeline", label: "Quick Draw", desc: "Follow up within 24 hours of first contact.", test: function (m) { return m.hasQuickFollowUp24h; } },
+    { key: "getting_started", tier: "easy", category: "Score", label: "Getting Started", desc: "Reach 100 lifetime points.", test: function (m) { return m.lifetimePoints >= 100; } },
+    { key: "on_a_roll", tier: "easy", category: "Score", label: "On a Roll", desc: "Reach 500 lifetime points.", test: function (m) { return m.lifetimePoints >= 500; } },
+    { key: "warming_up", tier: "easy", category: "Streak", label: "Warming Up", desc: "Hit your daily goal 3 days in a row.", test: function (m) { return m.bestStreakEver >= 3; } },
+    { key: "bounce_back", tier: "easy", category: "Streak", label: "Bounce Back", desc: "Hit your goal the day after missing one.", test: function (m) { return m.hasBounceBack; } },
+    { key: "weekend_warrior", tier: "easy", category: "Streak", label: "Weekend Warrior", desc: "Hit your goal both Saturday and Sunday.", test: function (m) { return m.hasWeekendBothDays; } },
+    { key: "goal_getter", tier: "easy", category: "Streak", label: "Goal Getter", desc: "Hit your daily goal for the first time.", test: function (m) { return m.bestStreakEver >= 1; } },
+    { key: "overachiever", tier: "easy", category: "Streak", label: "Overachiever", desc: "Double your daily goal in a single day.", test: function (m) { return m.doubleGoalDays >= 1; } },
+    { key: "early_bird", tier: "easy", category: "Quirky", label: "Early Bird", desc: "Log an action before 8am.", test: function (m) { return m.early; } },
+    { key: "night_owl", tier: "easy", category: "Quirky", label: "Night Owl", desc: "Log an action after 10pm.", test: function (m) { return m.night; } },
+    { key: "midnight_oil", tier: "easy", category: "Quirky", label: "Midnight Oil", desc: "Log an action between midnight and 3am.", test: function (m) { return m.midnight; } },
+    { key: "lucky_seven", tier: "easy", category: "Quirky", label: "Lucky Number Seven", desc: "Log exactly 7 actions in one day.", test: function (m) { return m.hasDayWithExactly7; } },
+    { key: "coffee_break_closer", tier: "easy", category: "Quirky", label: "Coffee Break Closer", desc: "Log 3 actions within 15 minutes.", test: function (m) { return m.hasBurst3in15; } },
+    { key: "friday_feeling", tier: "easy", category: "Quirky", label: "Friday Feeling", desc: "Log something on 5 different Fridays.", test: function (m) { return m.fridayCount >= 5; } },
+    { key: "monday_motivation", tier: "easy", category: "Quirky", label: "Monday Motivation", desc: "Hit your goal on 3 different Mondays.", test: function (m) { return m.mondayGoalHitCount >= 3; } },
+    { key: "solid_week", tier: "easy", category: "Volume", label: "Solid Week", desc: "Score 100 points in a single week.", test: function (m) { return m.bestWeek >= 100; } },
+    { key: "jack_of_all_trades", tier: "easy", category: "Variety", label: "Jack of All Trades", desc: "Log every action type at least once.", test: function (m) { return m.typesLoggedCount >= 8; } },
+    { key: "housekeeping", tier: "easy", category: "Hygiene", label: "Housekeeping", desc: "Edit a logged entry for the first time.", test: function (m) { return m.editedEntryCount >= 1; } },
+
+    // ---- MEDIUM ----
+    { key: "outreach_machine", tier: "medium", category: "Milestone", label: "Outreach Machine", desc: "Send 100 DMs.", test: function (m) { return m.counts.dm >= 100; } },
+    { key: "persistent", tier: "medium", category: "Milestone", label: "Persistent", desc: "Send 100 follow-ups.", test: function (m) { return m.counts.followup >= 100; } },
+    { key: "directors_cut", tier: "medium", category: "Milestone", label: "Director's Cut", desc: "Send 50 Looms.", test: function (m) { return m.counts.loom >= 50; } },
+    { key: "on_the_line", tier: "medium", category: "Milestone", label: "On the Line", desc: "Log 50 sales calls.", test: function (m) { return m.counts.call >= 50; } },
+    { key: "client_roster", tier: "medium", category: "Milestone", label: "Client Roster", desc: "Close 10 clients.", test: function (m) { return m.counts.client >= 10; } },
+    { key: "content_machine", tier: "medium", category: "Milestone", label: "Content Machine", desc: "Post 50 pieces of content.", test: function (m) { return m.counts.content >= 50; } },
+    { key: "community_voice", tier: "medium", category: "Milestone", label: "Community Voice", desc: "Log 100 comments.", test: function (m) { return m.counts.comment >= 100; } },
+    { key: "first_grand", tier: "medium", category: "Revenue", label: "First Grand", desc: "Log $1,000 in revenue.", test: function (m) { return m.revenueTotal >= 1000; } },
+    { key: "five_figures", tier: "medium", category: "Revenue", label: "Five Figures", desc: "Log $10,000 in revenue.", test: function (m) { return m.revenueTotal >= 10000; } },
+    { key: "century_club", tier: "medium", category: "Score", label: "Century Club", desc: "Reach 1,000 lifetime points.", test: function (m) { return m.lifetimePoints >= 1000; } },
+    { key: "overachievers_club", tier: "medium", category: "Score", label: "Overachiever's Club", desc: "Reach 2,500 lifetime points.", test: function (m) { return m.lifetimePoints >= 2500; } },
+    { key: "powerhouse", tier: "medium", category: "Score", label: "Powerhouse", desc: "Reach 5,000 lifetime points.", test: function (m) { return m.lifetimePoints >= 5000; } },
+    { key: "two_weeks_strong", tier: "medium", category: "Streak", label: "Two Weeks Strong", desc: "Hit a 14-day streak.", test: function (m) { return m.bestStreakEver >= 14; } },
+    { key: "flawless_week", tier: "medium", category: "Streak", label: "Flawless Week", desc: "Hit your daily goal all 7 days of one week.", test: function (m) { return m.perfectWeek; } },
+    { key: "double_trouble", tier: "medium", category: "Streak", label: "Double Trouble", desc: "Double your daily goal 5 times total.", test: function (m) { return m.doubleGoalDays >= 5; } },
+    { key: "big_week", tier: "medium", category: "Volume", label: "Big Week", desc: "Score 300 points in a single week.", test: function (m) { return m.bestWeek >= 300; } },
+    { key: "huge_month", tier: "medium", category: "Volume", label: "Huge Month", desc: "Score 1,000 points in a single month.", test: function (m) { return m.bestMonth >= 1000; } },
+    { key: "triple_digit_day", tier: "medium", category: "Volume", label: "Triple Digit Day", desc: "Score 100+ points in a single day.", test: function (m) { return m.bestDay >= 100; } },
+    { key: "half_the_battle", tier: "medium", category: "Funnel", label: "Half the Battle", desc: "Hit a 25% DM-to-Call rate (20+ DMs sent).", test: function (m) { return m.counts.dm >= 20 && m.dmToCallRate >= 0.25; } },
+    { key: "the_closer", tier: "medium", category: "Pipeline", label: "The Closer", desc: "Move 3 leads to Client stage.", test: function (m) { return m.leadsClientEver >= 3; } },
+    { key: "pipeline_builder", tier: "medium", category: "Pipeline", label: "Pipeline Builder", desc: "Manage 10 active leads at once.", test: function (m) { return m.maxActiveLeadCount >= 10; } },
+    { key: "full_roster", tier: "medium", category: "Pipeline", label: "Full Roster", desc: "Manage 25 active leads at once.", test: function (m) { return m.maxActiveLeadCount >= 25; } },
+    { key: "comeback_kid", tier: "medium", category: "Pipeline", label: "The Comeback Kid", desc: "A lead responds after 14+ days of silence.", test: function (m) { return m.hasComebackKid; } },
+    { key: "master_follow_up", tier: "medium", category: "Pipeline", label: "Master of the Follow-Up", desc: "Log 50 follow-up touches across all leads.", test: function (m) { return m.leadFollowUpTouches >= 50; } },
+    { key: "learned_moved_on", tier: "medium", category: "Pipeline", label: "Learned & Moved On", desc: "Archive 10 leads.", test: function (m) { return m.leadsArchivedCount >= 10; } },
+    { key: "quick_turnaround", tier: "medium", category: "Pipeline", label: "Quick Turnaround", desc: "A lead responds within 1 day of first contact.", test: function (m) { return m.hasQuickTurnaround; } },
+    { key: "ten_conversations", tier: "medium", category: "Pipeline", label: "Ten Conversations", desc: "10 leads have responded, total.", test: function (m) { return m.leadsRespondedCount >= 10; } },
+    { key: "fast_track", tier: "medium", category: "Pipeline", label: "Fast Track", desc: "Move a lead from New to Client in under 14 days.", test: function (m) { return m.hasFastTrack14; } },
+    { key: "renaissance_rep", tier: "medium", category: "Variety", label: "Renaissance Rep", desc: "Log 10 of every action type.", test: function (m) { return m.minCountAcrossTypes >= 10; } },
+    { key: "grind_never_stops", tier: "medium", category: "Streak", label: "The Grind Never Stops", desc: "Log something every day for a full calendar month.", test: function (m) { return m.perfectMonthAnyActivity; } },
+    { key: "new_year_new_pipeline", tier: "medium", category: "Quirky", label: "New Year, New Pipeline", desc: "Log an action on January 1st.", test: function (m) { return m.jan1; } },
+    { key: "no_days_off_almost", tier: "medium", category: "Streak", label: "No Days Off (Almost)", desc: "Hit your goal 25 of 30 days.", test: function (m) { return m.goalHit25of30; } },
+    { key: "badge_hunter", tier: "medium", category: "Meta", label: "Badge Hunter", desc: "Unlock 25 honors.", test: function (m) { return m.unlockedSoFar >= 25; } },
+    { key: "clean_sweep", tier: "medium", category: "Pipeline", label: "Clean Sweep", desc: "Zero overdue leads while managing 5+ active leads.", test: function (m) { return m.zeroOverdueAt5; } },
+    { key: "conversation_starter", tier: "medium", category: "Pipeline", label: "Conversation Starter", desc: "Add 20 leads to the pipeline, total.", test: function (m) { return m.leadsAddedTotal >= 20; } },
+    { key: "steady_hand", tier: "medium", category: "Hygiene", label: "Steady Hand", desc: "Correct 10 logged entries over time.", test: function (m) { return m.editedEntryCount >= 10; } },
+
+    // ---- HARD ----
+    { key: "the_relentless", tier: "hard", category: "Milestone", label: "The Relentless", desc: "Send 1,000 DMs.", test: function (m) { return m.counts.dm >= 1000; } },
+    { key: "never_give_up", tier: "hard", category: "Milestone", label: "Never Give Up", desc: "Send 500 follow-ups.", test: function (m) { return m.counts.followup >= 500; } },
+    { key: "studio_legend", tier: "hard", category: "Milestone", label: "Studio Legend", desc: "Send 250 Looms.", test: function (m) { return m.counts.loom >= 250; } },
+    { key: "cold_call_royalty", tier: "hard", category: "Milestone", label: "Cold Call Royalty", desc: "Log 250 sales calls.", test: function (m) { return m.counts.call >= 250; } },
+    { key: "empire_builder", tier: "hard", category: "Milestone", label: "Empire Builder", desc: "Close 50 clients.", test: function (m) { return m.counts.client >= 50; } },
+    { key: "thought_leader", tier: "hard", category: "Milestone", label: "Thought Leader", desc: "Post 200 pieces of content.", test: function (m) { return m.counts.content >= 200; } },
+    { key: "comment_legend", tier: "hard", category: "Milestone", label: "Comment Legend", desc: "Log 500 comments.", test: function (m) { return m.counts.comment >= 500; } },
+    { key: "six_figures", tier: "hard", category: "Revenue", label: "Six Figures", desc: "Log $100,000 in revenue.", test: function (m) { return m.revenueTotal >= 100000; } },
+    { key: "made_it_rain", tier: "hard", category: "Revenue", label: "Made It Rain", desc: "Log $25,000 in revenue.", test: function (m) { return m.revenueTotal >= 25000; } },
+    { key: "big_fish", tier: "hard", category: "Revenue", label: "Big Fish", desc: "Close a single client worth $10,000+.", test: function (m) { return m.maxSingleRevenue >= 10000; } },
+    { key: "legend", tier: "hard", category: "Score", label: "Legend", desc: "Reach 10,000 lifetime points.", test: function (m) { return m.lifetimePoints >= 10000; } },
+    { key: "icon", tier: "hard", category: "Score", label: "Icon", desc: "Reach 25,000 lifetime points.", test: function (m) { return m.lifetimePoints >= 25000; } },
+    { key: "hall_of_fame", tier: "hard", category: "Score", label: "Hall of Fame", desc: "Reach 50,000 lifetime points.", test: function (m) { return m.lifetimePoints >= 50000; } },
+    { key: "outreach_deity", tier: "hard", category: "Score", label: "Outreach Deity", desc: "Reach 100,000 lifetime points.", test: function (m) { return m.lifetimePoints >= 100000; } },
+    { key: "iron_will", tier: "hard", category: "Streak", label: "Iron Will", desc: "Hit a 30-day streak.", test: function (m) { return m.bestStreakEver >= 30; } },
+    { key: "unstoppable", tier: "hard", category: "Streak", label: "Unstoppable", desc: "Hit a 60-day streak.", test: function (m) { return m.bestStreakEver >= 60; } },
+    { key: "centurion_of_habit", tier: "hard", category: "Streak", label: "Centurion of Habit", desc: "Hit a 100-day streak.", test: function (m) { return m.bestStreakEver >= 100; } },
+    { key: "flawless_month", tier: "hard", category: "Streak", label: "Flawless Month", desc: "Hit your daily goal every day of a calendar month.", test: function (m) { return m.perfectMonth; } },
+    { key: "the_machine", tier: "hard", category: "Streak", label: "The Machine", desc: "Hit your goal 6 days a week for 8 straight weeks.", test: function (m) { return m.eightWeeksOk; } },
+    { key: "monster_week", tier: "hard", category: "Volume", label: "Monster Week", desc: "Score 750 points in a single week.", test: function (m) { return m.bestWeek >= 750; } },
+    { key: "record_month", tier: "hard", category: "Volume", label: "Record Month", desc: "Score 3,000 points in a single month.", test: function (m) { return m.bestMonth >= 3000; } },
+    { key: "best_quarter_ever", tier: "hard", category: "Volume", label: "Best Quarter Ever", desc: "Score 7,500 points in a single quarter.", test: function (m) { return m.bestQuarter >= 7500; } },
+    { key: "conversion_master", tier: "hard", category: "Funnel", label: "Conversion Master", desc: "Hit a 10% DM-to-Client rate (100+ DMs sent).", test: function (m) { return m.counts.dm >= 100 && m.dmToClientRate >= 0.10; } },
+    { key: "serial_closer", tier: "hard", category: "Pipeline", label: "Serial Closer", desc: "Move 20 leads to Client stage.", test: function (m) { return m.leadsClientEver >= 20; } },
+    { key: "nothing_falls_through", tier: "hard", category: "Pipeline", label: "Nothing Falls Through the Cracks", desc: "Zero overdue leads while managing 15+ active leads.", test: function (m) { return m.zeroOverdueAt15; } },
+    { key: "magnetic", tier: "hard", category: "Pipeline", label: "Magnetic", desc: "50 leads have responded, total.", test: function (m) { return m.leadsRespondedCount >= 50; } },
+    { key: "the_whisperer", tier: "hard", category: "Pipeline", label: "The Whisperer", desc: "Average under 3 days response time across 20+ responded leads.", test: function (m) { return m.respondedSampleCount >= 20 && m.avgResponseTime < 3; } },
+    { key: "speed_closer", tier: "hard", category: "Pipeline", label: "Speed Closer", desc: "Move a lead from New to Client in under 5 days.", test: function (m) { return m.hasSpeedClose5; } },
+    { key: "iron_pipeline", tier: "hard", category: "Pipeline", label: "Iron Pipeline", desc: "Manage 30+ active leads at once.", test: function (m) { return m.maxActiveLeadCount >= 30; } },
+    { key: "the_long_game", tier: "hard", category: "Pipeline", label: "The Long Game", desc: "Keep a lead active, with touches, for 180+ days.", test: function (m) { return m.hasLongGame180; } },
+    { key: "grandmaster", tier: "hard", category: "Variety", label: "Grandmaster", desc: "Log 50 of every action type.", test: function (m) { return m.minCountAcrossTypes >= 50; } },
+    { key: "one_year_strong", tier: "hard", category: "Score", label: "One Year Strong", desc: "Stay active from your first entry to 365 days later.", test: function (m) { return m.daysSinceFirstEntry >= 365; } },
+    { key: "completionist", tier: "hard", category: "Meta", label: "Completionist", desc: "Unlock 75 honors.", test: function (m) { return m.unlockedSoFar >= 75; } },
+    { key: "outreach_games_legend", tier: "hard", category: "Meta", label: "The Outreach Games Legend", desc: "Unlock every other honor in this guide.", test: function (m) { return m.unlockedSoFar >= BADGE_DEFS.length - 1; } }
   ];
 
   var FUNNEL_STAGES = ["dm", "loom", "call", "client"];
@@ -117,7 +220,8 @@
         entries: [],
         badges: {},
         goals: [],
-        leads: []
+        leads: [],
+        maxActiveLeadCount: 0
       };
     }
 
@@ -149,6 +253,7 @@
         if (!state.badges) state.badges = {};
         if (!state.goals) state.goals = [];
         if (!state.leads) state.leads = [];
+        if (state.maxActiveLeadCount == null) state.maxActiveLeadCount = 0;
         if (!state.pin) state.pin = opts.defaultPin || "1234";
         if (state.dailyGoal == null) state.dailyGoal = opts.defaultDailyGoal != null ? opts.defaultDailyGoal : 0;
         if (!state.dailyGoalDate) state.dailyGoalDate = todayKey();
@@ -289,62 +394,238 @@
       };
     }
 
-    function recomputeBadges(s) {
-      var entries = s.entries.filter(function (e) { return !e.deleted_at; });
-      var byType = {};
-      entries.forEach(function (e) { byType[e.action_type] = (byType[e.action_type] || 0) + 1; });
-      var totalPoints = entries.reduce(function (sum, e) { return sum + e.virtual_value; }, 0);
+    // Builds the one metrics snapshot every badge test() reads from, so each
+    // rule stays a one-line comparison instead of re-deriving its own data.
+    function computeBadgeMetrics() {
+      var entries = activeEntries();
+      var leads = state.leads;
 
-      var checks = {
-        first_blood: entries.length >= 1,
-        foot_in_door: (byType.followup || 0) >= 1,
-        on_the_board: (byType.call || 0) >= 1,
-        closer: (byType.client || 0) >= 1,
-        creator: (byType.content || 0) >= 10,
-        century_club: totalPoints >= 1000
-      };
+      var counts = {};
+      ACTION_TYPES.forEach(function (a) { counts[a.key] = 0; });
+      var revenueTotal = 0, maxSingleRevenue = 0, editedEntryCount = 0;
+      var dayTotals = {}, dayCounts = {}, weekTotals = {}, monthTotals = {}, quarterTotals = {};
+      var early = false, night = false, midnight = false, jan1 = false;
+      var fridaysSet = {};
+      var sortedTimes = [];
 
-      // Consistency streak: does the history contain any 7-day run of hit days?
-      var dayTotals = {};
       entries.forEach(function (e) {
-        var k = toISODate(new Date(e.created_at));
-        dayTotals[k] = (dayTotals[k] || 0) + e.virtual_value;
+        counts[e.action_type] = (counts[e.action_type] || 0) + 1;
+        if (e.action_type === "revenue" && e.real_revenue_amount) {
+          revenueTotal += e.real_revenue_amount;
+          if (e.real_revenue_amount > maxSingleRevenue) maxSingleRevenue = e.real_revenue_amount;
+        }
+        if (e.edited_at) editedEntryCount++;
+        var d = new Date(e.created_at);
+        var dKey = toISODate(d);
+        dayTotals[dKey] = (dayTotals[dKey] || 0) + e.virtual_value;
+        dayCounts[dKey] = (dayCounts[dKey] || 0) + 1;
+        var wKey = toISODate(startOfWeek(d));
+        weekTotals[wKey] = (weekTotals[wKey] || 0) + e.virtual_value;
+        var mKey = toISODate(startOfMonth(d));
+        monthTotals[mKey] = (monthTotals[mKey] || 0) + e.virtual_value;
+        var qKey = toISODate(startOfQuarter(d));
+        quarterTotals[qKey] = (quarterTotals[qKey] || 0) + e.virtual_value;
+        var hr = d.getHours();
+        if (hr < 8) early = true;
+        if (hr >= 22) night = true;
+        if (hr < 3) midnight = true;
+        if (d.getDay() === 5) fridaysSet[dKey] = true;
+        if (d.getMonth() === 0 && d.getDate() === 1) jan1 = true;
+        sortedTimes.push(d.getTime());
       });
-      var goal = s.dailyGoal || 0;
-      var hitDays = Object.keys(dayTotals).filter(function (k) {
-        return goal > 0 ? dayTotals[k] >= goal : dayTotals[k] > 0;
-      }).sort();
-      var best = 0, run = 0, prev = null;
-      hitDays.forEach(function (d) {
+      sortedTimes.sort(function (a, b) { return a - b; });
+      var hasBurst3in15 = false;
+      for (var i = 0; i + 2 < sortedTimes.length; i++) {
+        if (sortedTimes[i + 2] - sortedTimes[i] <= 15 * 60 * 1000) { hasBurst3in15 = true; break; }
+      }
+
+      var bestDay = 0, bestWeek = 0, bestMonth = 0, bestQuarter = 0;
+      Object.keys(dayTotals).forEach(function (k) { if (dayTotals[k] > bestDay) bestDay = dayTotals[k]; });
+      Object.keys(weekTotals).forEach(function (k) { if (weekTotals[k] > bestWeek) bestWeek = weekTotals[k]; });
+      Object.keys(monthTotals).forEach(function (k) { if (monthTotals[k] > bestMonth) bestMonth = monthTotals[k]; });
+      Object.keys(quarterTotals).forEach(function (k) { if (quarterTotals[k] > bestQuarter) bestQuarter = quarterTotals[k]; });
+      var hasDayWithExactly7 = Object.keys(dayCounts).some(function (k) { return dayCounts[k] === 7; });
+
+      var goal = state.dailyGoal || 0;
+      var hitDaySet = {};
+      Object.keys(dayTotals).forEach(function (k) { if (goal > 0 ? dayTotals[k] >= goal : dayTotals[k] > 0) hitDaySet[k] = true; });
+      var doubleGoalDays = goal > 0 ? Object.keys(dayTotals).filter(function (k) { return dayTotals[k] >= goal * 2; }).length : 0;
+
+      var hitDaysSorted = Object.keys(hitDaySet).sort();
+      var bestStreakEver = 0, run = 0, prev = null;
+      hitDaysSorted.forEach(function (d) {
         if (prev !== null && (new Date(d) - new Date(prev)) === DAY) run++; else run = 1;
-        best = Math.max(best, run);
+        bestStreakEver = Math.max(bestStreakEver, run);
         prev = d;
       });
-      checks.consistency_streak = best >= 7;
-
-      // Big week: any calendar week with >=300 points
-      var weekTotals = {};
-      entries.forEach(function (e) {
-        var wk = toISODate(startOfWeek(new Date(e.created_at)));
-        weekTotals[wk] = (weekTotals[wk] || 0) + e.virtual_value;
+      // Bounce-back: a hit day immediately preceded by a logged, missed day.
+      var hasBounceBack = hitDaysSorted.some(function (d) {
+        var prevDay = toISODate(addDays(new Date(d), -1));
+        return dayTotals.hasOwnProperty(prevDay) && !hitDaySet[prevDay];
       });
-      checks.big_week = Object.keys(weekTotals).some(function (w) { return weekTotals[w] >= 300; });
 
-      var nowIso = new Date().toISOString();
-      var newlyUnlocked = [];
-      BADGES.forEach(function (b) {
-        if (checks[b.key] && !s.badges[b.key]) {
-          s.badges[b.key] = nowIso;
-          newlyUnlocked.push(b.key);
+      var fridayCount = Object.keys(fridaysSet).length;
+      var mondayGoalHitCount = Object.keys(hitDaySet).filter(function (k) { return new Date(k).getDay() === 1; }).length;
+
+      var weekendPairs = {};
+      Object.keys(hitDaySet).forEach(function (k) {
+        var d = new Date(k), dow = d.getDay();
+        if (dow === 6 || dow === 0) {
+          var wk = toISODate(startOfWeek(d));
+          weekendPairs[wk] = weekendPairs[wk] || {};
+          weekendPairs[wk][dow === 6 ? "sat" : "sun"] = true;
         }
       });
+      var hasWeekendBothDays = Object.keys(weekendPairs).some(function (wk) { return weekendPairs[wk].sat && weekendPairs[wk].sun; });
+
+      var perfectWeek = Object.keys(weekTotals).some(function (wk) {
+        var start = new Date(wk);
+        for (var d2 = 0; d2 < 7; d2++) if (!hitDaySet[toISODate(addDays(start, d2))]) return false;
+        return true;
+      });
+
+      function monthAllDaysMatch(predicate) {
+        return Object.keys(monthTotals).some(function (mk) {
+          var start = new Date(mk), end = addMonths(start, 1);
+          var today = startOfDay(new Date());
+          var lastDay = end < today ? addDays(end, -1) : addDays(today, -1);
+          if (lastDay < start) return false;
+          var cursor = new Date(start);
+          while (cursor <= lastDay) {
+            if (!predicate(toISODate(cursor))) return false;
+            cursor = addDays(cursor, 1);
+          }
+          return true;
+        });
+      }
+      var perfectMonth = monthAllDaysMatch(function (k) { return hitDaySet[k]; });
+      var perfectMonthAnyActivity = monthAllDaysMatch(function (k) { return dayTotals.hasOwnProperty(k); });
+
+      var todayD = startOfDay(new Date());
+      var hitCountLast30 = 0;
+      for (var i30 = 0; i30 < 30; i30++) if (hitDaySet[toISODate(addDays(todayD, -i30))]) hitCountLast30++;
+      var goalHit25of30 = hitCountLast30 >= 25;
+
+      var eightWeeksOk = true;
+      var curWeekStart = startOfWeek(new Date());
+      for (var w = 0; w < 8; w++) {
+        var ws2 = addDays(curWeekStart, -7 * w);
+        var hitInWeek = 0;
+        for (var d3 = 0; d3 < 7; d3++) if (hitDaySet[toISODate(addDays(ws2, d3))]) hitInWeek++;
+        if (hitInWeek < 6) { eightWeeksOk = false; break; }
+      }
+
+      var firstEntryDate = null;
+      entries.forEach(function (e) { var t = new Date(e.created_at); if (!firstEntryDate || t < firstEntryDate) firstEntryDate = t; });
+      var daysSinceFirstEntry = firstEntryDate ? Math.floor((Date.now() - firstEntryDate.getTime()) / DAY) : 0;
+
+      var funnelCounts = funnel().counts;
+      var dmToCallRate = funnelCounts.dm > 0 ? funnelCounts.call / funnelCounts.dm : 0;
+      var dmToClientRate = funnelCounts.dm > 0 ? funnelCounts.client / funnelCounts.dm : 0;
+
+      var minCountAcrossTypes = Math.min.apply(null, ACTION_TYPES.map(function (a) { return counts[a.key] || 0; }));
+      var typesLoggedCount = ACTION_TYPES.filter(function (a) { return (counts[a.key] || 0) > 0; }).length;
+
+      // ---- leads ----
+      leads.forEach(function (l) {
+        if (!l.stagesReachedAt) { l.stagesReachedAt = {}; l.stagesReachedAt[l.stage] = l.created_at; }
+      });
+      var activeLeadsNow = leads.filter(function (l) { return !l.archived; });
+      if (activeLeadsNow.length > (state.maxActiveLeadCount || 0)) state.maxActiveLeadCount = activeLeadsNow.length;
+
+      var leadsAddedTotal = leads.length;
+      var leadsArchivedCount = leads.filter(function (l) { return l.archived; }).length;
+      var leadsRespondedCount = leads.filter(function (l) { return l.responded_at; }).length;
+      var leadsClientEver = leads.filter(function (l) { return l.stagesReachedAt && l.stagesReachedAt.client; }).length;
+      var leadsAdvancedTotal = leads.filter(function (l) { return l.stagesReachedAt && Object.keys(l.stagesReachedAt).length > 1; }).length;
+      var leadFollowUpTouches = entries.filter(function (e) { return e.lead_id && e.action_type === "followup"; }).length;
+
+      var hasQuickTurnaround = false, hasComebackKid = false, hasFastTrack14 = false, hasSpeedClose5 = false, hasLongGame180 = false, hasQuickFollowUp24h = false;
+      var responseTimes = [];
+      leads.forEach(function (l) {
+        var lEntries = entries.filter(function (e) { return e.lead_id === l.id; })
+          .sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
+        if (!lEntries.length) return;
+        var first = new Date(lEntries[0].created_at);
+        var last = new Date(lEntries[lEntries.length - 1].created_at);
+        if (lEntries.some(function (e, idx) { return idx > 0 && e.action_type === "followup" && (new Date(e.created_at) - first) <= DAY; })) {
+          hasQuickFollowUp24h = true;
+        }
+        if (l.responded_at) {
+          var respondedAt = new Date(l.responded_at);
+          responseTimes.push(Math.max(0, Math.round((respondedAt - first) / DAY)));
+          if (Math.round((respondedAt - first) / DAY) <= 1) hasQuickTurnaround = true;
+          if (Math.round((respondedAt - last) / DAY) >= 14) hasComebackKid = true;
+        }
+        if (l.stagesReachedAt && l.stagesReachedAt.client) {
+          var closeDays = Math.round((new Date(l.stagesReachedAt.client) - new Date(l.created_at)) / DAY);
+          if (closeDays <= 14) hasFastTrack14 = true;
+          if (closeDays <= 5) hasSpeedClose5 = true;
+        }
+        if (!l.archived && Math.round((last - first) / DAY) >= 180) hasLongGame180 = true;
+      });
+      var avgResponseTime = responseTimes.length ? (responseTimes.reduce(function (a, b) { return a + b; }, 0) / responseTimes.length) : null;
+
+      function overdueFreeAtMinimum(min) {
+        if (activeLeadsNow.length < min) return false;
+        return activeLeadsNow.every(function (l) { return leadFollowUp(l.id).status !== "overdue"; });
+      }
+
+      return {
+        counts: counts, revenueTotal: revenueTotal, maxSingleRevenue: maxSingleRevenue, editedEntryCount: editedEntryCount,
+        lifetimePoints: entries.reduce(function (sum, e) { return sum + e.virtual_value; }, 0),
+        bestDay: bestDay, bestWeek: bestWeek, bestMonth: bestMonth, bestQuarter: bestQuarter,
+        bestStreakEver: bestStreakEver, hasBounceBack: hasBounceBack, hasWeekendBothDays: hasWeekendBothDays,
+        doubleGoalDays: doubleGoalDays, early: early, night: night, midnight: midnight,
+        hasDayWithExactly7: hasDayWithExactly7, hasBurst3in15: hasBurst3in15,
+        fridayCount: fridayCount, mondayGoalHitCount: mondayGoalHitCount, jan1: jan1,
+        perfectWeek: perfectWeek, perfectMonth: perfectMonth, perfectMonthAnyActivity: perfectMonthAnyActivity,
+        goalHit25of30: goalHit25of30, eightWeeksOk: eightWeeksOk, daysSinceFirstEntry: daysSinceFirstEntry,
+        dmToCallRate: dmToCallRate, dmToClientRate: dmToClientRate,
+        minCountAcrossTypes: minCountAcrossTypes, typesLoggedCount: typesLoggedCount,
+        leadsAddedTotal: leadsAddedTotal, leadsArchivedCount: leadsArchivedCount, leadsRespondedCount: leadsRespondedCount,
+        leadsClientEver: leadsClientEver, leadsAdvancedTotal: leadsAdvancedTotal, leadFollowUpTouches: leadFollowUpTouches,
+        maxActiveLeadCount: state.maxActiveLeadCount || 0, hasQuickFollowUp24h: hasQuickFollowUp24h,
+        hasQuickTurnaround: hasQuickTurnaround, hasComebackKid: hasComebackKid, hasFastTrack14: hasFastTrack14,
+        hasSpeedClose5: hasSpeedClose5, hasLongGame180: hasLongGame180,
+        avgResponseTime: avgResponseTime, respondedSampleCount: responseTimes.length,
+        zeroOverdueAt5: overdueFreeAtMinimum(5), zeroOverdueAt15: overdueFreeAtMinimum(15),
+        unlockedSoFar: 0
+      };
+    }
+
+    function recomputeBadges(s) {
+      var m = computeBadgeMetrics();
+      var nowIso = new Date().toISOString();
+      var newlyUnlocked = [];
+
+      var alreadyUnlocked = 0;
+      Object.keys(s.badges).forEach(function () { alreadyUnlocked++; });
+
+      // Pass 1: every non-meta badge.
+      BADGE_DEFS.forEach(function (b) {
+        if (b.category === "Meta") return;
+        if (!s.badges[b.key] && b.test(m)) { s.badges[b.key] = nowIso; newlyUnlocked.push(b.key); }
+      });
+
+      // Pass 2: meta badges see how many (non-meta + already-unlocked meta)
+      // badges are unlocked as of pass 1, so "unlock 25 honors" etc. can fire
+      // in the same pass that crosses the threshold.
+      m.unlockedSoFar = Object.keys(s.badges).length;
+      BADGE_DEFS.forEach(function (b) {
+        if (b.category !== "Meta") return;
+        if (!s.badges[b.key] && b.test(m)) { s.badges[b.key] = nowIso; newlyUnlocked.push(b.key); }
+      });
+
       return newlyUnlocked;
     }
 
     function listBadges() {
-      return BADGES.map(function (b) {
+      return BADGE_DEFS.map(function (b) {
         return {
           key: b.key,
+          tier: b.tier,
+          category: b.category,
           label: b.label,
           desc: b.desc,
           unlocked: !!state.badges[b.key],
@@ -465,18 +746,21 @@
     }
 
     function addLead(input) {
+      var nowIso = new Date().toISOString();
       var lead = {
         id: uid(),
         name: (input.name || "").trim() || "Unnamed lead",
         notes: input.notes || "",
         stage: "new",
         archived: false,
-        created_at: new Date().toISOString(),
-        responded_at: null
+        created_at: nowIso,
+        responded_at: null,
+        stagesReachedAt: { new: nowIso }
       };
       state.leads.push(lead);
+      var newBadges = recomputeBadges(state);
       persist();
-      return lead;
+      return { lead: lead, newBadges: newBadges };
     }
 
     function updateLead(id, patch) {
@@ -492,45 +776,54 @@
       if (!l) return null;
       if (!LEAD_STAGES.some(function (s) { return s.key === stage; })) return null;
       l.stage = stage;
+      if (!l.stagesReachedAt) l.stagesReachedAt = {};
+      if (!l.stagesReachedAt[stage]) l.stagesReachedAt[stage] = new Date().toISOString();
+      var newBadges = recomputeBadges(state);
       persist();
-      return l;
+      return { lead: l, newBadges: newBadges };
     }
 
     function archiveLead(id) {
       var l = getLead(id);
       if (!l) return null;
       l.archived = true;
+      var newBadges = recomputeBadges(state);
       persist();
-      return l;
+      return { lead: l, newBadges: newBadges };
     }
 
     function unarchiveLead(id) {
       var l = getLead(id);
       if (!l) return null;
       l.archived = false;
+      var newBadges = recomputeBadges(state);
       persist();
-      return l;
+      return { lead: l, newBadges: newBadges };
     }
 
     function deleteLead(id) {
       state.leads = state.leads.filter(function (l) { return l.id !== id; });
+      var newBadges = recomputeBadges(state);
       persist();
+      return { newBadges: newBadges };
     }
 
     function markLeadResponded(id) {
       var l = getLead(id);
       if (!l) return null;
       l.responded_at = new Date().toISOString();
+      var newBadges = recomputeBadges(state);
       persist();
-      return l;
+      return { lead: l, newBadges: newBadges };
     }
 
     function clearLeadResponded(id) {
       var l = getLead(id);
       if (!l) return null;
       l.responded_at = null;
+      var newBadges = recomputeBadges(state);
       persist();
-      return l;
+      return { lead: l, newBadges: newBadges };
     }
 
     function leadEntries(id) {
@@ -597,12 +890,23 @@
         lead_id: leadId
       });
       var impliedStage = STAGE_FOR_ACTION[input.action_type];
+      var extraBadges = [];
       if (impliedStage) {
         var order = LEAD_STAGES.map(function (s) { return s.key; });
         if (order.indexOf(impliedStage) > order.indexOf(l.stage)) {
           l.stage = impliedStage;
+          if (!l.stagesReachedAt) l.stagesReachedAt = {};
+          if (!l.stagesReachedAt[impliedStage]) l.stagesReachedAt[impliedStage] = new Date().toISOString();
+          // The stage move itself (e.g. reaching Client) can unlock badges
+          // the entry-level check in addEntry() couldn't have seen yet.
+          extraBadges = recomputeBadges(state);
           persist();
         }
+      }
+      if (extraBadges.length) {
+        var seen = {};
+        res.newBadges.concat(extraBadges).forEach(function (k) { seen[k] = true; });
+        res.newBadges = Object.keys(seen);
       }
       return res;
     }
@@ -634,7 +938,7 @@
 
     return {
       ACTION_TYPES: ACTION_TYPES,
-      BADGES: BADGES,
+      BADGES: BADGE_DEFS,
       LEAD_STAGES: LEAD_STAGES,
       actionByKey: actionByKey,
       getState: function () { return state; },
