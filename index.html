@@ -92,6 +92,13 @@
 
   .action-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
   @media (max-width:720px){.action-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:480px){
+    .action-grid{grid-template-columns:1fr;}
+    .deco-tile{display:flex; align-items:center; gap:14px; text-align:left; padding:14px 16px;}
+    .deco-tile .ic{margin-bottom:0;}
+    .deco-tile .lb{margin-bottom:2px;}
+    .deco-tile .pt{margin-left:auto;}
+  }
   .deco-tile{
     position:relative; text-align:center; background:var(--emerald2); border:1px solid var(--border);
     clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
