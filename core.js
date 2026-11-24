@@ -374,14 +374,16 @@
       };
     }
 
-    // People reached: every Quick Log tap (any action) counts as one person,
+    // People reached: every Quick Log tap (except Comment and Content Post) counts as one person,
     // plus each pipeline lead once however many times it's touched (same
     // person). Deleting an entry removes it from the count.
+    var NO_PERSON = { comment: 1, content: 1 };
     function peopleReached() {
       var now = new Date(), ds = startOfDay(now), de = addDays(ds, 1);
       var ws = startOfWeek(now), we = addDays(ws, 7);
       var firstByLead = {}, loose = [];
       activeEntries().forEach(function (e) {
+        if (NO_PERSON[e.action_type]) return;
         var t = new Date(e.created_at);
         if (e.lead_id) {
           if (!firstByLead[e.lead_id] || t < firstByLead[e.lead_id]) firstByLead[e.lead_id] = t;
