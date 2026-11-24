@@ -374,19 +374,18 @@
       };
     }
 
-    // Unique people reached: every lead with at least one outbound touch
-    // (DM / follow-up / Loom), plus every quick-log DM not tied to a lead
-    // (each is a new person). Follow-ups and comments never add people.
+    // People reached: every Quick Log tap (any action) counts as one person,
+    // plus each pipeline lead once however many times it's touched (same
+    // person). Deleting an entry removes it from the count.
     function peopleReached() {
-      var OUT = { dm: 1, followup: 1, loom: 1 };
       var now = new Date(), ds = startOfDay(now), de = addDays(ds, 1);
       var ws = startOfWeek(now), we = addDays(ws, 7);
       var firstByLead = {}, loose = [];
       activeEntries().forEach(function (e) {
         var t = new Date(e.created_at);
         if (e.lead_id) {
-          if (OUT[e.action_type] && (!firstByLead[e.lead_id] || t < firstByLead[e.lead_id])) firstByLead[e.lead_id] = t;
-        } else if (e.action_type === "dm") loose.push(t);
+          if (!firstByLead[e.lead_id] || t < firstByLead[e.lead_id]) firstByLead[e.lead_id] = t;
+        } else loose.push(t);
       });
       var times = Object.keys(firstByLead).map(function (k) { return firstByLead[k]; }).concat(loose);
       function within(a, b) { return times.filter(function (t) { return t >= a && t < b; }).length; }
