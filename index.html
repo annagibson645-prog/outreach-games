@@ -177,6 +177,13 @@
   .daily-edit-form input:focus{outline:none; border-color:var(--gold);}
   .daily-edit-form .mini-btn{min-height:44px;}
 
+  .people-hero{text-align:center; padding:30px 20px 26px; border:1px solid var(--border-strong); background:var(--panel); margin-bottom:22px; position:relative;}
+  .people-hero .label{font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:var(--dim2); margin-bottom:6px;}
+  .people-hero .big{font-family:'Cormorant Garamond'; font-style:italic; font-weight:600; font-size:76px; line-height:1; color:var(--gold-bright);}
+  .people-hero .sub{margin-top:10px; font-size:12px; color:var(--dim); letter-spacing:0.06em;}
+  .people-hero .sub b{color:var(--gold); font-weight:600;}
+  .people-hero.bump .big{animation:peopleBump .5s ease;}
+  @keyframes peopleBump{40%{transform:scale(1.12);}}
   .stat-row{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; margin-bottom:22px; background:var(--border); border:1px solid var(--border);}
   @media (max-width:640px){.stat-row{grid-template-columns:1fr;}}
   .stat-box{background:var(--panel); padding:18px 20px; text-align:center;}
@@ -630,9 +637,23 @@
     });
   }
 
+  function peopleHeroHtml(p){
+    return '<div class="people-hero" id="peopleHero"><div class="label">People Reached</div>'+
+      '<div class="big" id="peopleTotal">'+p.total.toLocaleString()+'</div>'+
+      '<div class="sub"><b id="peopleToday">'+p.today+'</b> today · <b id="peopleWeek">'+p.week+'</b> this week · '+(p.total===1?'person':'people')+' contacted, all time</div></div>';
+  }
+  function refreshPeopleHero(prevTotal){
+    var p = core.computeKPIs().people, hero = $('#peopleHero'); if(!hero) return;
+    OutreachCharts.countUp($('#peopleTotal'), p.total);
+    $('#peopleToday').textContent = p.today; $('#peopleWeek').textContent = p.week;
+    if(p.total>prevTotal){ hero.classList.remove('bump'); void hero.offsetWidth; hero.classList.add('bump'); }
+    return p.total;
+  }
+
   function renderDashboard(){
     var kpi = core.computeKPIs();
     var html = '';
+    html += peopleHeroHtml(kpi.people);
     html += '<div class="panel daily-panel" id="dailyPanel">'+dailyPanelInner(kpi)+'</div>';
     html += '<div class="panel"><div class="panel-head"><h2 class="disp">Quick Log</h2><span class="eyebrow">Select an act to record it</span></div><div class="action-grid" id="actionGrid">';
     core.ACTION_TYPES.forEach(function(a){
@@ -661,9 +682,11 @@
     $('#actionGrid').addEventListener('click', function(e){
       var b = e.target.closest('.deco-tile'); if(!b) return;
       var key = b.dataset.action;
+      var prevPeople = core.computeKPIs().people.total;
       var res = core.addEntry({action_type:key});
       b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
-      toast('Recorded — '+core.actionByKey(key).label+' (+'+res.entry.virtual_value+')');
+      var nowPeople = refreshPeopleHero(prevPeople);
+      toast('Recorded — '+core.actionByKey(key).label+' (+'+res.entry.virtual_value+')'+(nowPeople>prevPeople?' · Person #'+nowPeople+' reached':''));
       renderHeader();
       var k2 = core.computeKPIs();
       OutreachCharts.countUp($('#statWeek'), k2.thisWeekTotal);
